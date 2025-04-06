@@ -5,3 +5,15 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.google.services) apply false
 }
+
+subprojects {
+    tasks.register<Copy>("copyBuildFiles") {
+        from(layout.buildDirectory.dir("outputs/apk/debug")) {
+            include("*.apk")
+        }
+        rename {
+            "Tango.apk"
+        }
+        into(layout.projectDirectory.dir("../builds"))
+    }
+}

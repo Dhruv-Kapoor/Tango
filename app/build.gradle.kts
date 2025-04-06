@@ -52,6 +52,12 @@ android {
     }
 }
 
+afterEvaluate {
+    tasks.named("packageDebug") {
+        finalizedBy("copyBuildFiles")
+    }
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
