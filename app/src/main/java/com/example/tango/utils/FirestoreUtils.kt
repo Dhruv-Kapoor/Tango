@@ -1,11 +1,11 @@
 package com.example.tango.utils
 
 import android.util.Log
+import com.example.tango.GRID_TYPES
 import com.example.tango.dataClasses.LeaderboardItem
 import com.example.tango.dataClasses.TangoCellData
 import com.example.tango.dataClasses.TangoGrid
 import com.example.tango.dataClasses.User
-import com.example.tango.utils.Gson
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
@@ -38,7 +38,8 @@ object FirestoreUtils {
     }
 
     fun getLatestTangoGrid(callback: (TangoGrid) -> Unit) {
-        getDb().collection(COLLECTIONS.GRIDS.value).orderBy("date", Query.Direction.DESCENDING)
+        getDb().collection(COLLECTIONS.GRIDS.value).whereEqualTo("type", GRID_TYPES.TANGO.value)
+            .orderBy("date", Query.Direction.DESCENDING)
             .limit(1).get().addOnCompleteListener() {
                 val gridDoc = it.result.documents[0]
                 val gridStr = gridDoc.data?.get("grid") as String
@@ -186,7 +187,8 @@ object FirestoreUtils {
 
     fun getGridState(gridId: String, userId: String, onResult: (Map<String, Any>?) -> Unit) {
         getDb().collection(COLLECTIONS.GRIDS.value).document(gridId)
-            .collection(COLLECTIONS.PARTICIPANTS.value).document(userId).get().addOnSuccessListener {
+            .collection(COLLECTIONS.PARTICIPANTS.value).document(userId).get()
+            .addOnSuccessListener {
                 if (it == null || it["currentState"] == null) {
                     onResult(null)
                 } else {
