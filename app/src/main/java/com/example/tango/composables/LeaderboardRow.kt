@@ -66,8 +66,9 @@ fun LeaderboardRow(
                 .padding(horizontal = 12.dp)
                 .weight(1f)
         ) {
-            Text(text = item.user.name, fontSize = 16.sp)
+            Text(modifier = Modifier.padding(0.dp), text = item.user.name, fontSize = 16.sp)
             Text(
+                modifier = Modifier.padding(0.dp),
                 textAlign = TextAlign.Center,
                 text = "took ${formatTime(item.timeTaken)}",
                 fontSize = 12.sp
@@ -86,11 +87,11 @@ fun LeaderboardRow(
 
 fun getColorForPlacement(i: Int): Pair<Color, Color> {
     if (i == 1) {
-        return Pair(Color(0xFFFFD700), Color(0xFFF0E68C))
+        return Pair(Color(0xFFFFD700), Color(0xFFFFA407))
     } else if (i == 2) {
-        return Pair(Color(0xFFE0E0E0), Color(0xFFA8A8A8))
+        return Pair(Color(0xFFCCC8C8), Color(0xFFA8A8A8))
     } else if (i == 3) {
-        return Pair(Color(0xFFCD7F32), Color(0xFFB87333))
+        return Pair(Color(0xFFDAA266), Color(0xFFB87333))
     }
     val colorPallet = arrayOf(
         Pair(Color(0xFFFFF5E6), Color(0xFFFFB347)),
