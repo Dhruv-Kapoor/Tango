@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="19dp"
+    android:height="19dp"
+    android:viewportWidth="19"
+    android:viewportHeight="19">
+
+    <!-- Diagonal line segment -->
+    <path
+        android:pathData="M19,0 L0,19"
+        android:strokeColor="#f80f0f"
+        android:strokeWidth="4"
+        android:strokeLineCap="square"/>
+</vector>

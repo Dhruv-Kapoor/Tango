@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+<!--    <item>-->
+<!--        <shape android:shape="rectangle">-->
+<!--            <solid android:color="@android:color/transparent"/>-->
+<!--        </shape>-->
+<!--    </item>-->
+
+<!--    <item android:drawable="@drawable/stripe_pattern">-->
+<!--&lt;!&ndash;        <bitmap android:src="@drawable/stripe_pattern"/>&ndash;&gt;-->
+<!--    </item>-->
+    <item android:height="19dp" android:width="19dp">
+        <bitmap android:src="@drawable/stripe_pattern"/>
+    </item>
+</layer-list>
