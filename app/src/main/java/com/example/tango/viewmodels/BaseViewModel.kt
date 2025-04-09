@@ -2,18 +2,19 @@ package com.example.tango.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.example.tango.BuildConfig
+import com.example.tango.Routes
+import com.example.tango.dataClasses.User
 import com.example.tango.utils.FirestoreUtils
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-open class BaseViewModel : ViewModel() {
+open class BaseViewModel(preview: Boolean = false) : ViewModel() {
 
     protected val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
-    protected val _currentUser = MutableStateFlow<FirebaseUser?>(null)
+    protected val _currentUser = MutableStateFlow<User?>(null)
     val currentUser = _currentUser.asStateFlow()
 
     protected val _isDeprecated = MutableStateFlow<Boolean>(false)
@@ -22,15 +23,20 @@ open class BaseViewModel : ViewModel() {
     protected val _config = MutableStateFlow<Map<String, Any>?>(null)
     val config = _config.asStateFlow()
 
+    private val _currentScreen = MutableStateFlow(Routes.Tango.route)
+    val currentScreen = _currentScreen.asStateFlow()
+
     init {
-        updateLoggedIn()
-        checkAppDeprecated()
+        if (!preview) {
+            updateLoggedIn()
+            checkAppDeprecated()
+        }
     }
 
     fun updateLoggedIn() {
         val user = FirestoreUtils.getCurrentUser()
         if (user != null) {
-            _currentUser.value = user
+            _currentUser.value = User.fromFirebaseUser(user)
             _isLoggedIn.value = true
         }
     }
@@ -42,5 +48,9 @@ open class BaseViewModel : ViewModel() {
                 _isDeprecated.value = true
             }
         }
+    }
+
+    fun setCurrentScreen(screen: Routes) {
+        _currentScreen.value = screen.route
     }
 }

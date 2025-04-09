@@ -1,6 +1,7 @@
 [versions]
 accompanistSystemuicontroller = "0.27.0"
 agp = "8.9.1"
+kizitonwoseCalendar = "2.6.2"
 glideCompose = "1.0.0-beta01"
 credentials = "1.5.0"
 firebaseBom = "33.12.0"
@@ -34,6 +35,7 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelCompose" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-vectordrawable = { module = "androidx.vectordrawable:vectordrawable", version.ref = "vectordrawable" }
+calendar-compose = { module = "com.kizitonwose.calendar:compose", version.ref = "kizitonwoseCalendar" }
 glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glideCompose" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

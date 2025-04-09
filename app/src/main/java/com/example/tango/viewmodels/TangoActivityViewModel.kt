@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class TangoActivityViewModel : BaseViewModel() {
+class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) {
     lateinit var gridId: String
 
     private val _grid = MutableStateFlow<Array<Array<TangoCellData>>?>(null)
@@ -28,24 +28,26 @@ class TangoActivityViewModel : BaseViewModel() {
     val ticks = _ticks.asStateFlow()
 
     init {
-        FirestoreUtils.getLatestTangoGrid {
-            _grid.value = it.grid
-            gridId = it.id
-            val user = _currentUser.value
-            if (user != null) {
-                FirestoreUtils.getGridState(it.id, user.uid) { state ->
-                    if (state != null) {
-                        _grid.value = FirestoreUtils.parseGridStr(state["grid"] as String)
-                        _completed.value = (state["completed"] as Boolean?) == true
-                        _ticks.value = (state["timeTaken"] as Long).toInt()
-                        if (_completed.value) {
-                            _started.value = true
+        if (!preview) {
+            FirestoreUtils.getLatestTangoGrid {
+                _grid.value = it.grid
+                gridId = it.id
+                val user = _currentUser.value
+                if (user != null) {
+                    FirestoreUtils.getGridState(it.id, user.id) { state ->
+                        if (state != null) {
+                            _grid.value = FirestoreUtils.parseGridStr(state["grid"] as String)
+                            _completed.value = (state["completed"] as Boolean?) == true
+                            _ticks.value = (state["timeTaken"] as Long).toInt()
+                            if (_completed.value) {
+                                _started.value = true
+                            }
                         }
+                        _loading.value = false
                     }
+                } else {
                     _loading.value = false
                 }
-            } else {
-                _loading.value = false
             }
         }
     }
@@ -56,7 +58,7 @@ class TangoActivityViewModel : BaseViewModel() {
         if (user != null && grid != null) {
             FirestoreUtils.pushGridState(
                 gridId = gridId,
-                userId = user.uid,
+                userId = user.id,
                 state = mapOf(
                     "grid" to FirestoreUtils.convertGridToStr(grid),
                     "completed" to _completed.value,
@@ -74,7 +76,7 @@ class TangoActivityViewModel : BaseViewModel() {
     fun onComplete() {
         _completed.value = true
         if (_isLoggedIn.value) {
-            FirestoreUtils.pushScore(gridId, _currentUser.value!!.uid, ticks.value)
+            FirestoreUtils.pushScore(gridId, _currentUser.value!!.id, ticks.value)
         }
     }
 
