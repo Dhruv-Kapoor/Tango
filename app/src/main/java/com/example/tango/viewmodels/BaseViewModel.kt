@@ -5,26 +5,37 @@ import com.example.tango.BuildConfig
 import com.example.tango.Routes
 import com.example.tango.dataClasses.User
 import com.example.tango.utils.FirestoreUtils
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 open class BaseViewModel(preview: Boolean = false) : ViewModel() {
+    lateinit var gridId: String
 
-    protected val _isLoggedIn = MutableStateFlow(false)
+    internal val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
-    protected val _currentUser = MutableStateFlow<User?>(null)
+    internal val _currentUser = MutableStateFlow<User?>(null)
     val currentUser = _currentUser.asStateFlow()
 
-    protected val _isDeprecated = MutableStateFlow<Boolean>(false)
+    internal val _isDeprecated = MutableStateFlow<Boolean>(false)
     val isDeprecated = _isDeprecated.asStateFlow()
 
-    protected val _config = MutableStateFlow<Map<String, Any>?>(null)
+    internal val _config = MutableStateFlow<Map<String, Any>?>(null)
     val config = _config.asStateFlow()
 
-    private val _currentScreen = MutableStateFlow(Routes.Tango.route)
-    val currentScreen = _currentScreen.asStateFlow()
+    internal val _loading = MutableStateFlow(true)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+    internal val _completed = MutableStateFlow(false)
+    val completed: StateFlow<Boolean> = _completed.asStateFlow()
+
+    internal val _started = MutableStateFlow(false)
+    val started: StateFlow<Boolean> = _started.asStateFlow()
+
+    internal val _ticks = MutableStateFlow(0)
+    val ticks = _ticks.asStateFlow()
 
     init {
         if (!preview) {
@@ -50,7 +61,27 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
         }
     }
 
-    fun setCurrentScreen(screen: Routes) {
-        _currentScreen.value = screen.route
+    fun onStart() {
+        _started.value = true
     }
+
+    fun onComplete() {
+        _completed.value = true
+        if (_isLoggedIn.value) {
+            FirestoreUtils.pushScore(gridId, _currentUser.value!!.id, ticks.value)
+        }
+    }
+
+    fun onTick() {
+        _ticks.value++
+    }
+
+    fun onSignUpCompleted(user: FirebaseUser) {
+        FirestoreUtils.addUser(user)
+        updateLoggedIn()
+        if (_completed.value) {
+            FirestoreUtils.pushScore(gridId, user.uid, ticks.value)
+        }
+    }
+
 }

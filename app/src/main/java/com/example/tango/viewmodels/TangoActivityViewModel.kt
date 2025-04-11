@@ -4,28 +4,12 @@ import com.example.tango.dataClasses.TangoCellData
 import com.example.tango.dataClasses.TangoCellValue
 import com.example.tango.utils.FirestoreUtils
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) {
-    lateinit var gridId: String
-
     private val _grid = MutableStateFlow<Array<Array<TangoCellData>>?>(null)
     val grid = _grid.asStateFlow()
-
-    private val _loading = MutableStateFlow(true)
-    val loading: StateFlow<Boolean> = _loading.asStateFlow()
-
-    private val _completed = MutableStateFlow(false)
-    val completed: StateFlow<Boolean> = _completed.asStateFlow()
-
-    private val _started = MutableStateFlow(false)
-    val started: StateFlow<Boolean> = _started.asStateFlow()
-
-    private val _ticks = MutableStateFlow(0)
-    val ticks = _ticks.asStateFlow()
 
     init {
         if (!preview) {
@@ -36,7 +20,7 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
                 if (user != null) {
                     FirestoreUtils.getGridState(it.id, user.id) { state ->
                         if (state != null) {
-                            _grid.value = FirestoreUtils.parseGridStr(state["grid"] as String)
+                            _grid.value = FirestoreUtils.parseTangoGridStr(state["grid"] as String)
                             _completed.value = (state["completed"] as Boolean?) == true
                             _ticks.value = (state["timeTaken"] as Long).toInt()
                             if (_completed.value) {
@@ -60,28 +44,13 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
                 gridId = gridId,
                 userId = user.id,
                 state = mapOf(
-                    "grid" to FirestoreUtils.convertGridToStr(grid),
+                    "grid" to FirestoreUtils.convertGridToStr(grid as Array<Array<Any>>),
                     "completed" to _completed.value,
                     "timeTaken" to _ticks.value,
                     "updatedOn" to Timestamp.now()
                 )
             )
         }
-    }
-
-    fun onStart() {
-        _started.value = true
-    }
-
-    fun onComplete() {
-        _completed.value = true
-        if (_isLoggedIn.value) {
-            FirestoreUtils.pushScore(gridId, _currentUser.value!!.id, ticks.value)
-        }
-    }
-
-    fun onTick() {
-        _ticks.value++
     }
 
     fun resetGrid() {
@@ -97,19 +66,11 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
             row.forEach { cell ->
                 if (!cell.disabled) {
                     cell.value = TangoCellValue.BLANK
-                    cell.containsError = false
                 }
+                cell.containsError = false
             }
         }
 
-    }
-
-    fun onSignUpCompleted(user: FirebaseUser) {
-        FirestoreUtils.addUser(user)
-        updateLoggedIn()
-        if (_completed.value) {
-            FirestoreUtils.pushScore(gridId, user.uid, ticks.value)
-        }
     }
 
 }

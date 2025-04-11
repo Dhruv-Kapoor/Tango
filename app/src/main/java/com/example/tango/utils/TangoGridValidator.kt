@@ -5,7 +5,7 @@ import com.example.tango.dataClasses.TangoCellData
 import com.example.tango.dataClasses.TangoCellValue
 
 private fun checkCells(grid: Array<Array<TangoCellData>>): Set<Pair<Int, Int>> {
-    val invalidCells = HashSet<Pair<Int, Int>>()
+    val invalidCells = hashSetOf<Pair<Int, Int>>()
     for (i in grid.indices) {
         for (j in grid[i].indices) {
             if (grid[i][j].value == TangoCellValue.BLANK) continue
@@ -65,7 +65,7 @@ private fun checkCells(grid: Array<Array<TangoCellData>>): Set<Pair<Int, Int>> {
 }
 
 fun checkRows(grid: Array<Array<TangoCellData>>): Set<Int> {
-    val invalidRows = HashSet<Int>()
+    val invalidRows = hashSetOf<Int>()
     for (i in grid.indices) {
         var s = 0
         var m = 0
@@ -82,7 +82,7 @@ fun checkRows(grid: Array<Array<TangoCellData>>): Set<Int> {
 }
 
 fun checkCols(grid: Array<Array<TangoCellData>>): Set<Int> {
-    val invalidRows = HashSet<Int>()
+    val invalidCols = hashSetOf<Int>()
     for (j in grid[0].indices) {
         var s = 0
         var m = 0
@@ -92,13 +92,13 @@ fun checkCols(grid: Array<Array<TangoCellData>>): Set<Int> {
             if (grid[i][j].value == TangoCellValue.MOON) ++m
         }
         if (s != m && (s + m) == grid.size) {
-            invalidRows.add(j)
+            invalidCols.add(j)
         }
     }
-    return invalidRows
+    return invalidCols
 }
 
-fun validateGrid(grid: Array<Array<TangoCellData>>, i: Int, j: Int): Boolean {
+fun validateTangoGrid(grid: Array<Array<TangoCellData>>, i: Int, j: Int): Boolean {
     val invalidCells = checkCells(grid)
     val invalidRows = checkRows(grid)
     val invalidCols = checkCols(grid)

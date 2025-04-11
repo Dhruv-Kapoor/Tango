@@ -17,14 +17,10 @@ class LeaderboardActivityViewModel : BaseViewModel() {
     private var _leaderboardData = MutableStateFlow<List<LeaderboardItem>>(listOf())
     val leaderboardData = _leaderboardData.asStateFlow()
 
-    private val _loading = MutableStateFlow(true)
-    val loading: StateFlow<Boolean> = _loading.asStateFlow()
-
     private val _currentViewType = MutableStateFlow(VIEWS.BEST_ATTEMPTS)
     val currentViewType = _currentViewType.asStateFlow()
 
     private var leaderboardDataListener: ListenerRegistration? = null
-    private lateinit var gridId: String
 
     fun switchToBestAttemptsView() {
         _currentViewType.value = VIEWS.BEST_ATTEMPTS

@@ -3,8 +3,9 @@ package com.example.tango.utils
 import android.util.Log
 import com.example.tango.GRID_TYPES
 import com.example.tango.dataClasses.LeaderboardItem
+import com.example.tango.dataClasses.QueensCellData
 import com.example.tango.dataClasses.TangoCellData
-import com.example.tango.dataClasses.TangoGrid
+import com.example.tango.dataClasses.Grid
 import com.example.tango.dataClasses.User
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
@@ -29,23 +30,29 @@ object FirestoreUtils {
         return Firebase.firestore
     }
 
-    fun parseGridStr(gridStr: String): Array<Array<TangoCellData>> {
+    fun parseTangoGridStr(gridStr: String): Array<Array<TangoCellData>> {
         return Gson.getGson().fromJson(gridStr, Array<Array<TangoCellData>>::class.java)
     }
 
-    fun convertGridToStr(grid: Array<Array<TangoCellData>>): String {
+    fun parseQueensGridStr(gridStr: String): Array<Array<QueensCellData>> {
+        val grid = Gson.getGson().fromJson(gridStr, Array<Array<QueensCellData>>::class.java)
+        populateQueensGrid(grid)
+        return grid
+    }
+
+    fun convertGridToStr(grid: Array<Array<Any>>): String {
         return Gson.getGson().toJson(grid)
     }
 
-    fun getLatestTangoGrid(callback: (TangoGrid) -> Unit) {
+    fun getLatestTangoGrid(callback: (Grid<TangoCellData>) -> Unit) {
         getDb().collection(COLLECTIONS.GRIDS.value).whereEqualTo("type", GRID_TYPES.TANGO.value)
             .orderBy("date", Query.Direction.DESCENDING)
             .limit(1).get().addOnCompleteListener() {
                 val gridDoc = it.result.documents[0]
                 val gridStr = gridDoc.data?.get("grid") as String
-                val grid = parseGridStr(gridStr)
+                val grid = parseTangoGridStr(gridStr)
                 callback(
-                    TangoGrid(
+                    Grid<TangoCellData>(
                         id = gridDoc.id,
                         grid = grid,
                         date = (gridDoc.data?.get("date") as Timestamp).toDate()
@@ -53,6 +60,41 @@ object FirestoreUtils {
                 )
             }
     }
+
+    fun populateQueensGrid(grid: Array<Array<QueensCellData>>) {
+        grid.forEachIndexed { i, row ->
+            row.forEachIndexed { j, cell ->
+                if (i == 0) {
+                    cell.topColorId = cell.color
+                } else {
+                    cell.topColorId = grid[i-1][j].color
+                }
+                if (j == 0) {
+                    cell.leftColorId = cell.color
+                } else {
+                    cell.leftColorId = grid[i][j-1].color
+                }
+            }
+        }
+    }
+
+    fun getLatestQueensGrid(callback: (Grid<QueensCellData>) -> Unit) {
+        getDb().collection(COLLECTIONS.GRIDS.value).whereEqualTo("type", GRID_TYPES.QUEENS.value)
+            .orderBy("date", Query.Direction.DESCENDING)
+            .limit(1).get().addOnCompleteListener() {
+                val gridDoc = it.result.documents[0]
+                val gridStr = gridDoc.data?.get("grid") as String
+                val grid = parseQueensGridStr(gridStr)
+                callback(
+                    Grid<QueensCellData>(
+                        id = gridDoc.id,
+                        grid = grid,
+                        date = (gridDoc.data?.get("date") as Timestamp).toDate()
+                    )
+                )
+            }
+    }
+
 
     fun addUser(user: FirebaseUser) {
         getDb().collection(COLLECTIONS.USERS.value).document(user.uid).set(

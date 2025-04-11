@@ -13,9 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -36,7 +34,7 @@ import com.example.tango.dataClasses.TangoCellValue
 
 @Composable
 fun TangoCell(
-    cellData: TangoCellData, completed: Boolean, onClick: (cellData: TangoCellData) -> Unit
+    cellData: TangoCellData, disabled: Boolean, onClick: () -> Unit
 ) {
     val symbolHeight = with(LocalDensity.current) {
         SYMBOL_SIZE.toPx()
@@ -48,21 +46,17 @@ fun TangoCell(
         rememberVectorPainter(image = ImageVector.vectorResource(id = R.drawable.equals))
     var cellData = remember { cellData }
 
+    val bgColor = if (cellData.disabled) colorResource(R.color.disabled_bg) else Color.White
     var modifier = if (cellData.containsError) {
-        Modifier.background(stripedBackground(cellData.disabled))
-    } else if (cellData.disabled) {
-        Modifier.background(colorResource(R.color.disabled_bg))
+        Modifier.background(stripedBackground(bgColor))
     } else {
-        Modifier.background(Color.White)
+        Modifier.background(bgColor)
     }
 
     Box(
         contentAlignment = Alignment.Center, modifier = modifier.clickable(
-            enabled = !completed && !cellData.disabled, onClick = {
-                cellData.value = (cellData.value % 3) + 1
-                onClick(cellData)
-            })
-
+            enabled = !disabled && !cellData.disabled, onClick = onClick
+        )
     ) {
         Canvas(modifier = Modifier.size(CELL_SIZE)) {
             val canvasWidth = size.width
@@ -207,7 +201,7 @@ fun TangoCellPreviewSun() {
                 topSymbol = SYMBOLS.EQUALS,
                 leftSymbol = SYMBOLS.CROSS,
                 value = TangoCellValue.SUN
-            ), completed = false, onClick = {})
+            ), disabled = false, onClick = {})
     }
 }
 
@@ -221,7 +215,7 @@ fun TangoCellPreviewMoon() {
                 topSymbol = SYMBOLS.CROSS,
                 leftSymbol = SYMBOLS.EQUALS,
                 value = TangoCellValue.MOON
-            ), completed = false, onClick = {})
+            ), disabled = false, onClick = {})
     }
 }
 
@@ -232,7 +226,7 @@ fun TangoCellPreviewDisabled() {
         TangoCell(
             TangoCellData(
                 disabled = true, value = TangoCellValue.SUN
-            ), completed = false, onClick = {})
+            ), disabled = false, onClick = {})
     }
 }
 
@@ -246,23 +240,6 @@ fun TangoCellPreviewError() {
             value = TangoCellValue.SUN,
         )
         a.containsError = true
-        TangoCell(a, completed = false, onClick = {})
+        TangoCell(a, disabled = false, onClick = {})
     }
-}
-
-@Composable
-fun stripedBackground(disabled: Boolean = false): Brush {
-    val stripeSize = with(LocalDensity.current) {
-        4.dp.toPx()
-    }
-    val brush = Brush.linearGradient(
-        0.0f to Color.Red,
-        0.3f to Color.Red,
-        0.3f to (if (disabled) colorResource(R.color.disabled_bg) else Color.White),
-        1.0f to (if (disabled) colorResource(R.color.disabled_bg) else Color.White),
-        start = Offset(0f, 0f),
-        end = Offset(stripeSize, stripeSize),
-        tileMode = TileMode.Repeated
-    )
-    return brush
 }
