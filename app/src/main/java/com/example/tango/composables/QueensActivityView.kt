@@ -43,20 +43,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.tango.CELL_UPDATE_THROTTLE
 import com.example.tango.LeaderboardActivity
 import com.example.tango.QUEENS_EDGE_THICKNESS_FACTOR
 import com.example.tango.R
 import com.example.tango.dataClasses.QueensCellData
-import com.example.tango.dataClasses.QueensCellValue
 import com.example.tango.utils.GoogleSignInUtils
 import com.example.tango.utils.Utils.dpToPx
 import com.example.tango.utils.Utils.pxToDp
-import com.example.tango.utils.autoPlaceX
-import com.example.tango.utils.validateQueensGrid
 import com.example.tango.viewmodels.QueensActivityViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Angle
@@ -86,7 +80,6 @@ fun QueensActivityView(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val activity = LocalActivity.current
-    var validatorJob: Job? = null
 
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp.dpToPx()
     val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size ?: 1)
@@ -125,20 +118,10 @@ fun QueensActivityView(
                         color = Color.Black,
                         shape = RoundedCornerShape(4.dp)
                     ), cellSize = cellSize.toInt().pxToDp(), enableDragging = true, onDrag = {
-                        if (grid!![it.first][it.second].value == QueensCellValue.BLANK) {
-                            grid[it.first][it.second].value = QueensCellValue.CROSS
-                        }
+                        viewModel.onDrag(it.first, it.second)
                     }) { cell, i, j ->
                     QueensCell(cell, completed, cellSize.toInt()) {
-                        cell.value = (cell.value % 3) + 1
-                        validatorJob?.cancel()
-                        validatorJob = scope.launch {
-                            autoPlaceX(grid!!, i, j)
-                            delay(CELL_UPDATE_THROTTLE)
-                            if (validateQueensGrid(grid, i, j) && !completed) {
-                                viewModel.onComplete()
-                            }
-                        }
+                        viewModel.onCellUpdate(cell, i, j)
                     }
                 }
 
@@ -150,14 +133,9 @@ fun QueensActivityView(
                 ) {
                     Button(
                         modifier = Modifier.weight(1f),
+                        enabled = !viewModel.undoStack.isEmpty(),
                         onClick = {
-                            scope.launch {
-                                snackbarHostState?.currentSnackbarData?.dismiss()
-                                snackbarHostState?.showSnackbar(
-                                    "banega banega",
-                                    duration = SnackbarDuration.Short
-                                )
-                            }
+                            viewModel.onUndo()
                         }) { Text("Undo") }
                     Spacer(modifier = Modifier.size(24.dp))
                     Button(modifier = Modifier.weight(1f), onClick = {

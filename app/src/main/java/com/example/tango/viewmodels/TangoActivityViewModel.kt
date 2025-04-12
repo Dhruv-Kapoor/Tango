@@ -1,15 +1,25 @@
 package com.example.tango.viewmodels
 
+import androidx.lifecycle.viewModelScope
+import com.example.tango.CELL_UPDATE_THROTTLE
 import com.example.tango.dataClasses.TangoCellData
 import com.example.tango.dataClasses.TangoCellValue
 import com.example.tango.utils.FirestoreUtils
+import com.example.tango.utils.TangoAction
+import com.example.tango.utils.UndoStack
+import com.example.tango.utils.validateTangoGrid
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) {
     private val _grid = MutableStateFlow<Array<Array<TangoCellData>>?>(null)
     val grid = _grid.asStateFlow()
+    val undoStack = UndoStack<TangoAction>()
+    private var validatorJob: Job? = null
 
     init {
         if (!preview) {
@@ -59,6 +69,7 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
             _ticks.value = 0
             _completed.value = false
         }
+        undoStack.clear()
     }
 
     fun clearGrid(grid: Array<Array<TangoCellData>>) {
@@ -71,6 +82,26 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
             }
         }
 
+    }
+
+    fun onCellUpdate(cell: TangoCellData, i: Int, j: Int) {
+        undoStack.onAction(TangoAction(cell.value, Pair(i, j)))
+        cell.value = (cell.value % 3) + 1
+        validatorJob?.cancel()
+        validatorJob = viewModelScope.launch {
+            delay(CELL_UPDATE_THROTTLE)
+            if (validateTangoGrid(_grid.value!!, i, j) && !completed.value) {
+                onComplete()
+            }
+        }
+    }
+
+    fun onUndo() {
+        val action = undoStack.onUndo()
+        val grid = _grid.value
+        if (action != null && grid != null) {
+            grid[action.location.first][action.location.second].value = action.oldValue
+        }
     }
 
 }

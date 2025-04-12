@@ -41,15 +41,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.example.tango.CELL_UPDATE_THROTTLE
 import com.example.tango.LeaderboardActivity
 import com.example.tango.R
 import com.example.tango.dataClasses.TangoCellData
 import com.example.tango.utils.GoogleSignInUtils
-import com.example.tango.utils.validateTangoGrid
 import com.example.tango.viewmodels.TangoActivityViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Angle
@@ -128,7 +124,6 @@ fun TangoActivityView(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val activity = LocalActivity.current
-    var validatorJob: Job? = null
 
     Box(
         modifier = modifier
@@ -160,14 +155,7 @@ fun TangoActivityView(
                 }
                 Grid<TangoCellData>(grid) { cell, i, j ->
                     TangoCell(cell, completed) {
-                        cell.value = (cell.value % 3) + 1
-                        validatorJob?.cancel()
-                        validatorJob = scope.launch {
-                            delay(CELL_UPDATE_THROTTLE)
-                            if (validateTangoGrid(grid!!, i, j) && !completed) {
-                                viewModel.onComplete()
-                            }
-                        }
+                        viewModel.onCellUpdate(cell, i, j)
                     }
                 }
 
@@ -179,14 +167,9 @@ fun TangoActivityView(
                 ) {
                     Button(
                         modifier = Modifier.weight(1f),
+                        enabled = !viewModel.undoStack.isEmpty(),
                         onClick = {
-                            scope.launch {
-                                snackbarHostState?.currentSnackbarData?.dismiss()
-                                snackbarHostState?.showSnackbar(
-                                    "banega banega",
-                                    duration = SnackbarDuration.Short
-                                )
-                            }
+                            viewModel.onUndo()
                         }) { Text("Undo") }
                     Spacer(modifier = Modifier.size(24.dp))
                     Button(modifier = Modifier.weight(1f), onClick = {

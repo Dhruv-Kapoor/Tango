@@ -1,16 +1,26 @@
 package com.example.tango.viewmodels
 
+import androidx.lifecycle.viewModelScope
+import com.example.tango.CELL_UPDATE_THROTTLE
 import com.example.tango.dataClasses.QueensCellData
 import com.example.tango.dataClasses.QueensCellValue
-import com.example.tango.dataClasses.TangoCellValue
 import com.example.tango.utils.FirestoreUtils
+import com.example.tango.utils.QueensAction
+import com.example.tango.utils.UndoStack
+import com.example.tango.utils.autoPlaceX
+import com.example.tango.utils.validateQueensGrid
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) {
     private val _grid = MutableStateFlow<Array<Array<QueensCellData>>?>(null)
     val grid = _grid.asStateFlow()
+    val undoStack = UndoStack<QueensAction>()
+    private var validatorJob: Job? = null
 
     init {
         if (!preview) {
@@ -61,6 +71,7 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
             _ticks.value = 0
             _completed.value = false
         }
+        undoStack.clear()
     }
 
     fun clearGrid(grid: Array<Array<QueensCellData>>) {
@@ -71,6 +82,37 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
             }
         }
 
+    }
+
+    fun onCellUpdate(cell: QueensCellData, i: Int, j: Int) {
+        undoStack.onAction(QueensAction(cell.value, Pair(i, j)))
+        cell.value = (cell.value % 3) + 1
+        validatorJob?.cancel()
+        val grid = _grid.value
+        validatorJob = viewModelScope.launch {
+            autoPlaceX(grid!!, i, j)
+            delay(CELL_UPDATE_THROTTLE)
+            if (validateQueensGrid(grid, i, j) && !_completed.value) {
+                onComplete()
+            }
+        }
+    }
+
+    fun onUndo() {
+        val action = undoStack.onUndo()
+        val grid = _grid.value
+        if (action != null && grid != null) {
+            grid[action.location.first][action.location.second].value = action.oldValue
+            autoPlaceX(grid, action.location.first, action.location.second)
+        }
+    }
+
+    fun onDrag(i: Int, j: Int) {
+        val grid = _grid.value
+        if (grid!![i][j].value == QueensCellValue.BLANK) {
+            undoStack.onAction(QueensAction(grid[i][j].value, Pair(i, j)))
+            grid[i][j].value = QueensCellValue.CROSS
+        }
     }
 
 }
