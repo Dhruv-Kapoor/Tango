@@ -62,10 +62,10 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
         run: |
-          curl -sL https://firebase.tools | bash
           echo "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
           export GOOGLE_APPLICATION_CREDENTIALS=firebase-service-account.json
           
+          npm install -g firebase-tools
           firebase firestore:update \
               --project tango-b2ad7 \
               config/test '{
