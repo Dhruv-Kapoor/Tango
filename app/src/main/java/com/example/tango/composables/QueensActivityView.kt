@@ -133,7 +133,7 @@ fun QueensActivityView(
                 ) {
                     Button(
                         modifier = Modifier.weight(1f),
-                        enabled = !viewModel.undoStack.isEmpty(),
+                        enabled = !viewModel.undoStack.isEmpty() && !completed,
                         onClick = {
                             viewModel.onUndo()
                         }) { Text("Undo") }
