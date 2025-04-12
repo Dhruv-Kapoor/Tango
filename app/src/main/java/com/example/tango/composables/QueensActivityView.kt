@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
@@ -48,6 +49,7 @@ import com.example.tango.QUEENS_EDGE_THICKNESS_FACTOR
 import com.example.tango.R
 import com.example.tango.dataClasses.QueensCellData
 import com.example.tango.utils.GoogleSignInUtils
+import com.example.tango.utils.Utils.dpToPx
 import com.example.tango.utils.autoPlaceX
 import com.example.tango.utils.validateQueensGrid
 import com.example.tango.viewmodels.QueensActivityViewModel
@@ -85,6 +87,9 @@ fun QueensActivityView(
     val activity = LocalActivity.current
     var validatorJob: Job? = null
 
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp.dpToPx()
+    val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size?:1)
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -118,7 +123,7 @@ fun QueensActivityView(
                     color = Color.Black,
                     shape = RoundedCornerShape(4.dp)
                 )) { cell, i, j ->
-                    QueensCell(cell, completed) {
+                    QueensCell(cell, completed, cellSize.toInt()) {
                         cell.value = (cell.value % 3) + 1
                         validatorJob?.cancel()
                         validatorJob = scope.launch {

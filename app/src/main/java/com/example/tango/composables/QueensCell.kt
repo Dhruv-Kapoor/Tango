@@ -15,19 +15,21 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.tango.CELL_SIZE
 import com.example.tango.EDGE_STROKE
 import com.example.tango.QUEENS_EDGE_THICKNESS_FACTOR
 import com.example.tango.R
 import com.example.tango.dataClasses.QueensCellData
 import com.example.tango.dataClasses.QueensCellValue
+import com.example.tango.utils.Utils.dpToPx
+import com.example.tango.utils.Utils.pxToDp
 
 @Composable
 fun QueensCell(
-    cellData: QueensCellData, disabled: Boolean = false, onClick: () -> Unit
+    cellData: QueensCellData, disabled: Boolean = false, cellSize: Int, onClick: () -> Unit
 ) {
     val edgeColor = colorResource(R.color.black)
     var cellData = remember { cellData }
+    val cellSizeInDp = cellSize.pxToDp()
 
     var modifier = if (cellData.containsError) {
         Modifier.background(stripedBackground(cellData.getColor()))
@@ -40,7 +42,7 @@ fun QueensCell(
             enabled = !disabled, onClick = onClick
         )
     ) {
-        Canvas(modifier = Modifier.size(52.dp)) {
+        Canvas(modifier = Modifier.size(cellSizeInDp)) {
             val canvasWidth = size.width
             val canvasHeight = size.height
 
@@ -95,8 +97,10 @@ fun QueensCellPreview() {
     QueensCell(
         QueensCellData(
             QueensCellValue.QUEEN,
-            0
-        )
+            0,
+        ),
+        cellSize = 52.dp.dpToPx().toInt(),
+
     ) { }
 }
 
@@ -107,7 +111,8 @@ fun QueensCellCross() {
         QueensCellData(
             QueensCellValue.CROSS,
             1
-        )
+        ),
+        cellSize = 52.dp.dpToPx().toInt(),
     ) { }
 }
 
@@ -121,6 +126,8 @@ fun QueensCellError() {
     cell.containsError = true
     QueensCell(
         cell,
-        disabled = true
+        disabled = true,
+        52.dp.dpToPx().toInt()
+
     ) { }
 }
