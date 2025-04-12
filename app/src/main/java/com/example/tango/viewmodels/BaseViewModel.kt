@@ -2,7 +2,6 @@ package com.example.tango.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.example.tango.BuildConfig
-import com.example.tango.Routes
 import com.example.tango.dataClasses.User
 import com.example.tango.utils.FirestoreUtils
 import com.google.firebase.auth.FirebaseUser
@@ -37,10 +36,17 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
     internal val _ticks = MutableStateFlow(0)
     val ticks = _ticks.asStateFlow()
 
+    internal val _updateAvailable = MutableStateFlow(false)
+    val updateAvailable = _updateAvailable.asStateFlow()
+
     init {
         if (!preview) {
             updateLoggedIn()
-            checkAppDeprecated()
+            FirestoreUtils.getLatestConfig { config ->
+                _config.value = config
+                checkAppDeprecated()
+                checkForUpdates()
+            }
         }
     }
 
@@ -53,11 +59,18 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
     }
 
     fun checkAppDeprecated() {
-        FirestoreUtils.getLatestConfig { config ->
-            _config.value = config
-            if (BuildConfig.VERSION_NAME in (config["deprecatedVersions"] as List<*>)) {
-                _isDeprecated.value = true
-            }
+        if (BuildConfig.VERSION_NAME in ((_config.value?.get("deprecatedVersions")
+                ?: emptyList<String>()) as List<*>)
+        ) {
+            _isDeprecated.value = true
+        }
+    }
+
+    fun checkForUpdates() {
+        if (BuildConfig.VERSION_CODE < ((config.value?.get("latestVersionCode")
+                ?: 0) as Long).toInt()
+        ) {
+            _updateAvailable.value = true
         }
     }
 

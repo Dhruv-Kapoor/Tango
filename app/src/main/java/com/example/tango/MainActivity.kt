@@ -24,11 +24,14 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -36,7 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -77,6 +80,8 @@ class MainActivity : ComponentActivity() {
         val isDeprecated by viewModel.isDeprecated.collectAsStateWithLifecycle()
         val currentUser by viewModel.currentUser.collectAsState()
         val config by viewModel.config.collectAsState()
+        val updateAvailable by viewModel.updateAvailable.collectAsState()
+        val uriHandler = LocalUriHandler.current
 
         val snackbarHostState = remember { SnackbarHostState() }
         val navController = rememberNavController()
@@ -184,6 +189,22 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                    }
+                }
+                if (updateAvailable) {
+                    LaunchedEffect(Unit) {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                        val result = snackbarHostState.showSnackbar(
+                            message = "New update available",
+                            actionLabel = "Update",
+                            duration = SnackbarDuration.Long
+                        )
+                        when (result) {
+                            SnackbarResult.Dismissed -> {}
+                            SnackbarResult.ActionPerformed -> {
+                                uriHandler.openUri(config!!["appLink"].toString())
+                            }
+                        }
                     }
                 }
             }
