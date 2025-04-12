@@ -59,36 +59,9 @@ jobs:
 
       - name: Update Firestore
 #        if: steps.tag.outcome == 'success'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-        run: |
-#          echo "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
-#          export GOOGLE_APPLICATION_CREDENTIALS=firebase-service-account.json
-          
-          curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-          sudo apt-get install -y nodejs
-          
-          cat > update_firestore.js << 'EOF'
-          const { initializeApp, cert } = require('firebase-admin/app');
-          const { getFirestore, FieldValue } = require('firebase-admin/firestore');
-          const serviceAccount = JSON.parse(process.env.$FIREBASE_SERVICE_ACCOUNT);
-          
-          initializeApp({
-            credential: cert(serviceAccount)
-          });
-          
-          const db = getFirestore();
-          
-          async function updateRelease() {
-            await db.collection('config').doc('config').set({
-              latestVersionCode: parseInt(process.env.VERSION_CODE),
-              updatedOn: FieldValue.serverTimestamp()
-            }, { merge: true });
-            
-            console.log('Firestore document updated successfully');
-          }
-          
-          updateRelease().catch(console.error);
-          EOF
-          
-          node update_firestore.js
+        run: node update_firestore.js
