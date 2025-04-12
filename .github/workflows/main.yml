@@ -31,7 +31,7 @@ jobs:
         id: commit
         run: |
           git add builds/Tango.apk
-          git commit -m "release build" || echo "No changes to commit"
+          git commit -m "[Github-Actions] release build" || echo "No changes to commit"
           git push origin HEAD:${{ github.ref }}
 
       - name: Extract versionName and versionCode
@@ -54,21 +54,22 @@ jobs:
 
           git tag $TAG_NAME
           git push origin $TAG_NAME
-          
+
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
-      - name: Update Firestore
+      - name: Setup Node
+        id: setup-node
         if: steps.tag.outcome == 'success'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+
+
+      - name: Update Firestore
+        if: steps.setup-node.outcome == 'success'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          VERSION_CODE: ${{ steps.gradle-version.outputs.versionCode }}
         run: |
-          curl -sL https://firebase.tools | bash
-          echo "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
-          firebase firestore:update \
-              --project tango-b2ad7 \
-              --data '{
-                "latestVersionCode": "${{ steps.gradle-version.outputs.versionCode }}"
-              }' \
-              --collection config \
-              --document config \
-              --service-account firebase-service-account.json
+          npm install firebase-admin
+          node update_firestore.js
