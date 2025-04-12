@@ -69,6 +69,7 @@ jobs:
         if: steps.setup-node.outcome == 'success'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          VERSION_CODE: ${{ VERSION_CODE }}
         run: |
           npm install firebase-admin
           node update_firestore.js
