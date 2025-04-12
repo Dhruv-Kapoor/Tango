@@ -48,6 +48,7 @@ jobs:
           
       - name: Create tag
         if: steps.commit.outcome == 'success'
+        id: tag
         run: |
           TAG_NAME="v${{ steps.gradle-version.outputs.versionName }}__${{ steps.gradle-version.outputs.versionCode }}"
 
@@ -55,3 +56,19 @@ jobs:
           git push origin $TAG_NAME
           
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+      - name: Update Firestore
+        if: steps.tag.outcome == 'success'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          curl -sL https://firebase.tools | bash
+          echo "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
+          firebase firestore:update \
+              --project tango-b2ad7 \
+              --data '{
+                "latestVersionCode": "${{ steps.gradle-version.outputs.versionCode }}"
+              }' \
+              --collection config \
+              --document config \
+              --service-account firebase-service-account.json
