@@ -58,7 +58,7 @@ jobs:
 #          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Update Firestore
-        if: steps.tag.outcome == 'success'
+#        if: steps.tag.outcome == 'success'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
         run: |
