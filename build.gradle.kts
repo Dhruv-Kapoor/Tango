@@ -13,7 +13,7 @@ subprojects {
             include("*.apk")
         }
         rename {
-            "Tango.apk"
+            "debug.apk"
         }
         into(layout.projectDirectory.dir("../builds"))
     }

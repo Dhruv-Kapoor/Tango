@@ -1,0 +1,57 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    environment:
+      name: production
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git config
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "dhruvkapoor.200@gmail.com"
+          git remote set-url origin "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+      - name: Copy file
+        run: |
+          cp builds/debug.apk builds/Tango.apk
+
+      - name: Commit changes
+        id: commit
+        run: |
+          git add builds/Tango.apk
+          git commit -m "release build" || echo "No changes to commit"
+          git push origin HEAD:${{ github.ref }}
+
+      - name: Extract versionName and versionCode
+        id: gradle-version
+        run: |
+          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | awk -F\" '{print $2}')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | awk '{print $3}')
+          
+          echo "VersionName: $VERSION_NAME"
+          echo "VersionCode: $VERSION_CODE"
+          
+          echo "versionName=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "versionCode=$VERSION_CODE" >> $GITHUB_OUTPUT
+          
+      - name: Create tag
+        if: steps.commit.outcome == 'success'
+        run: |
+          TAG_NAME="v${{ steps.gradle-version.outputs.versionName }} (${{ steps.gradle-version.outputs.versionCode }})"
+
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+          
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
