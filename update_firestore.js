@@ -1,6 +1,8 @@
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
-const serviceAccount = JSON.parse(process.env.$FIREBASE_SERVICE_ACCOUNT);
+console.log(process.env)
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
 
 initializeApp({
 credential: cert(serviceAccount)
