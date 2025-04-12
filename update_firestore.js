@@ -10,7 +10,7 @@ credential: cert(serviceAccount)
 const db = getFirestore();
 
 async function updateRelease() {
-await db.collection('configTest').doc('config').set({
+await db.collection('config').doc('config').set({
   latestVersionCode: parseInt(process.env.VERSION_CODE),
   updatedOn: FieldValue.serverTimestamp()
 }, { merge: true });
