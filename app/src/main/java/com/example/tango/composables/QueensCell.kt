@@ -38,9 +38,10 @@ fun QueensCell(
     }
 
     Box(
-        contentAlignment = Alignment.Center, modifier = modifier.clickable(
-            enabled = !disabled, onClick = onClick
-        )
+        contentAlignment = Alignment.Center, modifier = modifier
+            .clickable(
+                enabled = !disabled, onClick = onClick
+            )
     ) {
         Canvas(modifier = Modifier.size(cellSizeInDp)) {
             val canvasWidth = size.width
@@ -101,7 +102,7 @@ fun QueensCellPreview() {
         ),
         cellSize = 52.dp.dpToPx().toInt(),
 
-    ) { }
+        ) { }
 }
 
 @Preview

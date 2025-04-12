@@ -48,12 +48,13 @@ import com.example.tango.LeaderboardActivity
 import com.example.tango.QUEENS_EDGE_THICKNESS_FACTOR
 import com.example.tango.R
 import com.example.tango.dataClasses.QueensCellData
+import com.example.tango.dataClasses.QueensCellValue
 import com.example.tango.utils.GoogleSignInUtils
 import com.example.tango.utils.Utils.dpToPx
+import com.example.tango.utils.Utils.pxToDp
 import com.example.tango.utils.autoPlaceX
 import com.example.tango.utils.validateQueensGrid
 import com.example.tango.viewmodels.QueensActivityViewModel
-import com.example.tango.viewmodels.TangoActivityViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -88,7 +89,7 @@ fun QueensActivityView(
     var validatorJob: Job? = null
 
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp.dpToPx()
-    val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size?:1)
+    val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size ?: 1)
 
     Box(
         modifier = modifier
@@ -118,11 +119,16 @@ fun QueensActivityView(
                         Text(if (completed) "Reset" else "Clear")
                     }
                 }
-                Grid<QueensCellData>(grid, Modifier.border(
-                    width = 0.5.dp * QUEENS_EDGE_THICKNESS_FACTOR,
-                    color = Color.Black,
-                    shape = RoundedCornerShape(4.dp)
-                )) { cell, i, j ->
+                Grid<QueensCellData>(
+                    grid, Modifier.border(
+                        width = 0.5.dp * QUEENS_EDGE_THICKNESS_FACTOR,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(4.dp)
+                    ), cellSize = cellSize.toInt().pxToDp(), enableDragging = true, onDrag = {
+                        if (grid!![it.first][it.second].value == QueensCellValue.BLANK) {
+                            grid[it.first][it.second].value = QueensCellValue.CROSS
+                        }
+                    }) { cell, i, j ->
                     QueensCell(cell, completed, cellSize.toInt()) {
                         cell.value = (cell.value % 3) + 1
                         validatorJob?.cancel()
