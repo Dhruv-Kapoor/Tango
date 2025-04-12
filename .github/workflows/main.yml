@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - pipeline_test
+      - master
 
 jobs:
   deploy:
