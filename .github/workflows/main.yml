@@ -64,10 +64,11 @@ jobs:
         with:
           node-version: '18.x'
 
+
       - name: Update Firestore
         if: steps.setup-node.outcome == 'success'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
         run: |
-          npm install -g firebase-admin
+          npm install firebase-admin
           node update_firestore.js
