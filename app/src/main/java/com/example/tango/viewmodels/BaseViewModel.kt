@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.example.tango.BuildConfig
 import com.example.tango.dataClasses.User
 import com.example.tango.utils.FirestoreUtils
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -85,10 +86,32 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
         _completed.value = true
         attemptedGridNumbers.add(gridNumber)
         pushScore()
+        saveState()
     }
 
     open fun pushScore() {
         throw RuntimeException("Need to override push score function")
+    }
+
+    open fun getGrid(): Array<Array<Any>>? {
+        throw RuntimeException("Need to override getGrid function")
+    }
+
+    fun saveState() {
+        val user = _currentUser.value
+        val grid = getGrid()
+        if (user != null && grid != null) {
+            FirestoreUtils.pushGridState(
+                gridId = gridId,
+                userId = user.id,
+                state = mapOf(
+                    "grid" to FirestoreUtils.convertGridToStr(grid),
+                    "completed" to _completed.value,
+                    "timeTaken" to _ticks.value,
+                    "updatedOn" to Timestamp.now()
+                )
+            )
+        }
     }
 
     fun onTick() {

@@ -66,23 +66,6 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
         }
     }
 
-    fun saveState() {
-        val user = _currentUser.value
-        val grid = _grid.value
-        if (user != null && grid != null) {
-            FirestoreUtils.pushGridState(
-                gridId = gridId,
-                userId = user.id,
-                state = mapOf(
-                    "grid" to FirestoreUtils.convertGridToStr(grid as Array<Array<Any>>),
-                    "completed" to _completed.value,
-                    "timeTaken" to _ticks.value,
-                    "updatedOn" to Timestamp.now()
-                )
-            )
-        }
-    }
-
     fun resetGrid() {
         clearGrid(_grid.value!!)
         if (_completed.value) {
@@ -133,6 +116,10 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
         }
     }
 
+    override fun getGrid(): Array<Array<Any>>? {
+        return _grid.value as Array<Array<Any>>?
+    }
+
     fun getMinDate(): LocalDate {
         return (_config.value?.get("minTangoDate") as Timestamp).toInstant()
             .atZone(ZoneId.systemDefault()).toLocalDate()
@@ -142,6 +129,7 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
         if (selectedGridNumber == gridNumber) {
             return
         }
+        saveState()
 
         _loading.value = true
         _started.value = false
