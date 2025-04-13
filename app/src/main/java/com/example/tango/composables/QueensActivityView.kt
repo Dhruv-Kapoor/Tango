@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,13 +20,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
@@ -81,6 +86,8 @@ fun QueensActivityView(
     val context = LocalContext.current
     val activity = LocalActivity.current
 
+    var openCalendarDialog by remember { mutableStateOf(false) }
+
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp.dpToPx()
     val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size ?: 1)
 
@@ -98,13 +105,25 @@ fun QueensActivityView(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(modifier = Modifier.width(100.dp), onClick = {}) {
                         Timer(running = !completed, ticks = ticks) {
                             viewModel.onTick()
                         }
+                    }
+                    Button(contentPadding = PaddingValues(start = 24.dp, end = 20.dp), onClick = {
+                        openCalendarDialog = true
+                    }) {
+                        Text("#${viewModel.gridNumber}")
+                        Spacer(Modifier.size(12.dp))
+                        Icon(
+                            modifier = Modifier.size(16.dp),
+                            painter = painterResource(R.drawable.switch_icon),
+                            contentDescription = null
+                        )
                     }
                     Button(modifier = Modifier.width(100.dp), onClick = {
                         viewModel.resetGrid()
@@ -128,7 +147,7 @@ fun QueensActivityView(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Button(
@@ -137,7 +156,7 @@ fun QueensActivityView(
                         onClick = {
                             viewModel.onUndo()
                         }) { Text("Undo") }
-                    Spacer(modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.size(8.dp))
                     Button(modifier = Modifier.weight(1f), onClick = {
                         scope.launch {
                             snackbarHostState?.currentSnackbarData?.dismiss()
@@ -232,6 +251,22 @@ fun QueensActivityView(
                     }) { Text(if (ticks == 0) "Start" else "Resume") }
                 }
             }
+        }
+        if (openCalendarDialog) {
+            CalendarModal(
+                minDate = viewModel.getMinDate(),
+                maxDate = viewModel.latestGridData.date,
+                maxNumber = viewModel.latestGridData.number,
+                selectedNumber = viewModel.gridNumber,
+                attemptedNumbers = viewModel.attemptedGridNumbers,
+                onDismissRequest = {
+                    openCalendarDialog = false
+                },
+                onDayClick = {
+                    openCalendarDialog = false
+                    viewModel.setGridForDate(it)
+                }
+            )
         }
     }
 }

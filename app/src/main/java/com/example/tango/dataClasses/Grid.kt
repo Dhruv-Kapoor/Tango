@@ -1,11 +1,12 @@
 package com.example.tango.dataClasses
 
-import java.util.Date
+import java.time.LocalDate
 
-data class Grid <T> (
+data class Grid<T>(
     val id: String,
     val grid: Array<Array<T>>,
-    val date: Date
+    val date: LocalDate,
+    val number: Int,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

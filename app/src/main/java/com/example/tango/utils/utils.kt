@@ -14,7 +14,8 @@ object Utils {
         }
     }
 
-    fun Modifier.conditional(condition : Boolean, modifier : Modifier.() -> Modifier) : Modifier {
+    @Composable
+    fun Modifier.conditional(condition : Boolean, modifier : @Composable Modifier.() -> Modifier) : Modifier {
         return if (condition) {
             then(modifier(Modifier))
         } else {

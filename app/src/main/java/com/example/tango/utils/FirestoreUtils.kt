@@ -2,10 +2,10 @@ package com.example.tango.utils
 
 import android.util.Log
 import com.example.tango.GRID_TYPES
+import com.example.tango.dataClasses.Grid
 import com.example.tango.dataClasses.LeaderboardItem
 import com.example.tango.dataClasses.QueensCellData
 import com.example.tango.dataClasses.TangoCellData
-import com.example.tango.dataClasses.Grid
 import com.example.tango.dataClasses.User
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
@@ -17,6 +17,8 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import java.time.LocalDate
+import java.time.ZoneId
 
 object FirestoreUtils {
 
@@ -55,7 +57,9 @@ object FirestoreUtils {
                     Grid<TangoCellData>(
                         id = gridDoc.id,
                         grid = grid,
-                        date = (gridDoc.data?.get("date") as Timestamp).toDate()
+                        date = (gridDoc.data?.get("date") as Timestamp).toInstant()
+                            .atZone(ZoneId.systemDefault()).toLocalDate(),
+                        number = (gridDoc.data?.get("number") as Long).toInt()
                     )
                 )
             }
@@ -67,12 +71,12 @@ object FirestoreUtils {
                 if (i == 0) {
                     cell.topColorId = cell.color
                 } else {
-                    cell.topColorId = grid[i-1][j].color
+                    cell.topColorId = grid[i - 1][j].color
                 }
                 if (j == 0) {
                     cell.leftColorId = cell.color
                 } else {
-                    cell.leftColorId = grid[i][j-1].color
+                    cell.leftColorId = grid[i][j - 1].color
                 }
             }
         }
@@ -89,7 +93,9 @@ object FirestoreUtils {
                     Grid<QueensCellData>(
                         id = gridDoc.id,
                         grid = grid,
-                        date = (gridDoc.data?.get("date") as Timestamp).toDate()
+                        date = (gridDoc.data?.get("date") as Timestamp).toInstant()
+                            .atZone(ZoneId.systemDefault()).toLocalDate(),
+                        number = (gridDoc.data?.get("number") as Long).toInt()
                     )
                 )
             }
@@ -119,7 +125,7 @@ object FirestoreUtils {
             }
     }
 
-    fun pushScore(gridId: String, userId: String, timeTaken: Int) {
+    fun pushScore(gridId: String, userId: String, timeTaken: Int, gridNumber: Int, gridType: Int) {
         getUserScore(gridId, userId) {
             var bestAttempt = timeTaken
             var firstAttempt = timeTaken
@@ -150,6 +156,8 @@ object FirestoreUtils {
                         Pair("bestAttemptOn", bestAttemptOn),
                         Pair("attempts", attempts),
                         Pair("gridId", gridId),
+                        Pair("gridNumber", gridNumber),
+                        Pair("gridType", gridType)
                     ),
                     SetOptions.merge()
                 )
@@ -236,6 +244,44 @@ object FirestoreUtils {
                 } else {
                     onResult(it["currentState"] as Map<String, Any>)
                 }
+            }
+    }
+
+    fun getAttemptedGridNumbers(type: Int, userId: String, onResult: (HashSet<Int>) -> Unit) {
+        getDb().collectionGroup(COLLECTIONS.PARTICIPANTS.value)
+            .whereEqualTo("id", userId)
+            .whereEqualTo("gridType", type)
+            .whereNotEqualTo("firstAttempt", null).get()
+            .addOnSuccessListener {
+                val attemptedNumbers = hashSetOf<Int>()
+                it.documents.forEach { doc ->
+                    attemptedNumbers.add(doc.get("gridNumber", Int::class.java)!!)
+                }
+                onResult(attemptedNumbers)
+            }
+    }
+
+    fun <T> getGrid(gridNumber: Int, type: Int, onResult: (Grid<T>) -> Unit) {
+        getDb().collection(COLLECTIONS.GRIDS.value)
+            .whereEqualTo("type", type)
+            .whereEqualTo("number", gridNumber)
+            .get()
+            .addOnCompleteListener() {
+                val gridDoc = it.result.documents[0]
+                val gridStr = gridDoc.data?.get("grid") as String
+                val grid = when (type) {
+                    GRID_TYPES.QUEENS.value -> parseQueensGridStr(gridStr)
+                    else -> parseTangoGridStr(gridStr)
+                } as Array<Array<T>>
+                onResult(
+                    Grid<T>(
+                        id = gridDoc.id,
+                        grid = grid,
+                        date = (gridDoc.data?.get("date") as Timestamp).toInstant()
+                            .atZone(ZoneId.systemDefault()).toLocalDate(),
+                        number = (gridDoc.data?.get("number") as Long).toInt()
+                    )
+                )
             }
     }
 }

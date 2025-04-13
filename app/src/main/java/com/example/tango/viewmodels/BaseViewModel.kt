@@ -8,9 +8,12 @@ import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.properties.Delegates
 
 open class BaseViewModel(preview: Boolean = false) : ViewModel() {
     lateinit var gridId: String
+    var gridNumber by Delegates.notNull<Int>()
+    var attemptedGridNumbers = hashSetOf<Int>()
 
     internal val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
@@ -80,9 +83,12 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
 
     fun onComplete() {
         _completed.value = true
-        if (_isLoggedIn.value) {
-            FirestoreUtils.pushScore(gridId, _currentUser.value!!.id, ticks.value)
-        }
+        attemptedGridNumbers.add(gridNumber)
+        pushScore()
+    }
+
+    open fun pushScore() {
+        throw RuntimeException("Need to override push score function")
     }
 
     fun onTick() {
@@ -92,9 +98,7 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
     fun onSignUpCompleted(user: FirebaseUser) {
         FirestoreUtils.addUser(user)
         updateLoggedIn()
-        if (_completed.value) {
-            FirestoreUtils.pushScore(gridId, user.uid, ticks.value)
-        }
+        pushScore()
     }
 
 }
