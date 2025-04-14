@@ -31,14 +31,20 @@ import com.example.tango.SYMBOL_SIZE
 import com.example.tango.dataClasses.SYMBOLS
 import com.example.tango.dataClasses.TangoCellData
 import com.example.tango.dataClasses.TangoCellValue
+import com.example.tango.utils.Utils.pxToDp
 
 @Composable
 fun TangoCell(
-    cellData: TangoCellData, disabled: Boolean, onClick: () -> Unit
+    cellData: TangoCellData,
+    disabled: Boolean,
+    cellSize: Int = CELL_SIZE.value.toInt(),
+    onClick: () -> Unit
 ) {
     val symbolHeight = with(LocalDensity.current) {
         SYMBOL_SIZE.toPx()
     }
+    val cellSizeInDp = cellSize.pxToDp()
+
     val edgeColor = colorResource(R.color.border_color)
     val crossPainter =
         rememberVectorPainter(image = ImageVector.vectorResource(id = R.drawable.cross))
@@ -58,7 +64,7 @@ fun TangoCell(
             enabled = !disabled && !cellData.disabled, onClick = onClick
         )
     ) {
-        Canvas(modifier = Modifier.size(CELL_SIZE)) {
+        Canvas(modifier = Modifier.size(cellSizeInDp)) {
             val canvasWidth = size.width
             val canvasHeight = size.height
             val mid = canvasHeight / 2

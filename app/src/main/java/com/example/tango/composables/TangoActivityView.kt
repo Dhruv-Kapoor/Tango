@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
@@ -50,6 +51,7 @@ import com.example.tango.LeaderboardActivity
 import com.example.tango.R
 import com.example.tango.dataClasses.TangoCellData
 import com.example.tango.utils.GoogleSignInUtils
+import com.example.tango.utils.Utils.dpToPx
 import com.example.tango.viewmodels.TangoActivityViewModel
 import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.compose.KonfettiView
@@ -129,7 +131,9 @@ fun TangoActivityView(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val activity = LocalActivity.current
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp.dpToPx()
 
+    val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size ?: 1)
     var openCalendarDialog by remember { mutableStateOf(false) }
 
     Box(
@@ -173,7 +177,7 @@ fun TangoActivityView(
                     }
                 }
                 Grid<TangoCellData>(grid) { cell, i, j ->
-                    TangoCell(cell, completed) {
+                    TangoCell(cell, completed, cellSize.toInt()) {
                         viewModel.onCellUpdate(cell, i, j)
                     }
                 }
