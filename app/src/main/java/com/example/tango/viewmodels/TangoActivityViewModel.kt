@@ -90,9 +90,15 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
     fun onCellUpdate(cell: TangoCellData, i: Int, j: Int) {
         undoStack.onAction(TangoAction(cell.value, Pair(i, j)))
         cell.value = (cell.value % 3) + 1
-        validatorJob?.cancel()
-        validatorJob = viewModelScope.launch {
-            delay(CELL_UPDATE_THROTTLE)
+        if (cell.value == TangoCellValue.SUN) {
+            validatorJob?.cancel()
+            validatorJob = viewModelScope.launch {
+                delay(CELL_UPDATE_THROTTLE)
+                if (validateTangoGrid(_grid.value!!, i, j) && !completed.value) {
+                    onComplete()
+                }
+            }
+        } else {
             if (validateTangoGrid(_grid.value!!, i, j) && !completed.value) {
                 onComplete()
             }
