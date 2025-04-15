@@ -85,9 +85,20 @@ fun QueensCell(
                 painter = painterResource(id = R.drawable.queen_cross), contentDescription = "Cross"
             )
 
-            QueensCellValue.QUEEN -> Image(
-                painter = painterResource(id = R.drawable.queen), contentDescription = "Queen"
-            )
+            QueensCellValue.QUEEN -> {
+                if (disabled) {
+                    Image(
+                        painter = painterResource(id = R.drawable.queen2),
+                        contentDescription = "Queen"
+                    )
+                }
+                if (!disabled) {
+                    Image(
+                        painter = painterResource(id = R.drawable.queen),
+                        contentDescription = "Queen"
+                    )
+                }
+            }
         }
     }
 }

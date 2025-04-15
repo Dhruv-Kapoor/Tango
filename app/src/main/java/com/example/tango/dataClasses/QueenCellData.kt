@@ -35,22 +35,22 @@ class QueensCellData(
 
     companion object {
         val COLORS = arrayOf(
-            Color(0xffffe04b),
-            Color(0xffc387e0),
-            Color(0xff729aec),
-            Color(0xff8acc6d),
-            Color(0xffff93f3),
-            Color(0xff62efea),
-            Color(0xffa3d2d8),
-            Color(0xffdfa0bf),
-            Color(0xffb9b29e),
-            Color(0xffe6f388),
-            Color(0xffff7b60),
-            Color(0xffdfdfdf),
-            Color(0xffb3dfa0),
-            Color(0xff96beff),
-            Color(0xffffc992),
             Color(0xffbba3e2),
+            Color(0xffffc992),
+            Color(0xff96beff),
+            Color(0xffb3dfa0),
+            Color(0xffdfdfdf),
+            Color(0xffff7b60),
+            Color(0xffe6f388),
+            Color(0xffb9b29e),
+            Color(0xffdfa0bf),
+            Color(0xffa3d2d8),
+            Color(0xff62efea),
+            Color(0xffff93f3),
+            Color(0xff8acc6d),
+            Color(0xff729aec),
+            Color(0xffc387e0),
+            Color(0xffffe04b),
         )
     }
 }

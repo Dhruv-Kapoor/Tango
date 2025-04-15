@@ -77,18 +77,24 @@ fun validateQueensGrid(grid: Array<Array<QueensCellData>>, i: Int, j: Int): Bool
     val invalidColors = checkColors(grid)
 
     var blanks = false
+    var queensCount = 0
+    val uniqueColors = hashSetOf<Int>()
     for (i in grid.indices) {
         for (j in grid[i].indices) {
             if (!blanks && grid[i][j].value == QueensCellValue.BLANK) {
                 blanks = true
             }
+            if (grid[i][j].value == QueensCellValue.QUEEN) {
+                ++queensCount
+            }
+            uniqueColors.add(grid[i][j].color)
             grid[i][j].containsError = Pair(i, j) in invalidCells ||
                     i in invalidRows ||
                     j in invalidCols ||
                     grid[i][j].color in invalidColors
         }
     }
-    return !blanks && invalidCells.isEmpty() && invalidRows.isEmpty() && invalidCols.isEmpty()
+    return !blanks && invalidCells.isEmpty() && invalidRows.isEmpty() && invalidCols.isEmpty() && (queensCount == uniqueColors.size)
 }
 
 fun autoPlaceX(grid: Array<Array<QueensCellData>>, placedI: Int, placedJ: Int) {
