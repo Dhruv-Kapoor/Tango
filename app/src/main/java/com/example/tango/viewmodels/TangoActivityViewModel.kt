@@ -110,6 +110,7 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
         val grid = _grid.value
         if (action != null && grid != null) {
             grid[action.location.first][action.location.second].value = action.oldValue
+            validateTangoGrid(grid, action.location.first, action.location.second)
         }
     }
 

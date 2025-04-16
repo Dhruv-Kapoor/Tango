@@ -110,6 +110,7 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
         if (action != null && grid != null) {
             grid[action.location.first][action.location.second].value = action.oldValue
             autoPlaceX(grid, action.location.first, action.location.second)
+            validateQueensGrid(grid, action.location.first, action.location.second)
         }
     }
 
