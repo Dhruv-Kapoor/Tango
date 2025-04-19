@@ -28,15 +28,12 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
 
-      - name: Decode signing key
+      - name: Create required files
         run: |
           echo "${{ secrets.KEYSTORE }}" > keystore.jks
           base64 --decode keystore.jks > release.keystore
-        shell: bash
-
-      - name: Create secrets.properties
-        run: |
           echo SERVER_CLIENT_ID = \"${{ secrets.SERVER_CLIENT_ID }}\" > secrets.properties
+          echo ${{ secrets.GOOGLE_SERVICES_JSON }} > app/google-services.json
         shell: bash
 
       - name: Grant execute permission for gradlew
