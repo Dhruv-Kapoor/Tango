@@ -55,6 +55,7 @@ import com.example.tango.utils.Utils.dpToPx
 import com.example.tango.utils.Utils.pxToDp
 import com.example.tango.viewmodels.ZipActivityViewModel
 import kotlinx.coroutines.launch
+import me.zhanghai.compose.preference.defaultPreferenceFlow
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Angle
 import nl.dionsegijn.konfetti.core.Party
@@ -85,6 +86,7 @@ fun ZipActivityView(
     val context = LocalContext.current
     val activity = LocalActivity.current
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp.dpToPx()
+    val preferences = defaultPreferenceFlow().collectAsState()
 
     val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size ?: 1)
     var openCalendarDialog by remember { mutableStateOf(false) }
@@ -107,8 +109,14 @@ fun ZipActivityView(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(modifier = Modifier.width(100.dp), onClick = {}) {
-                        Timer(running = !completed, ticks = ticks) {
+                    if (preferences.value.get<Boolean>("show_timer") == true) {
+                        Button(modifier = Modifier.width(100.dp), onClick = {}) {
+                            Timer(running = !completed, ticks = ticks) {
+                                viewModel.onTick()
+                            }
+                        }
+                    } else {
+                        Timer(running = !completed, ticks = ticks, hideClock = true) {
                             viewModel.onTick()
                         }
                     }
@@ -242,7 +250,7 @@ fun ZipActivityView(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(R.drawable.preview),
+                    painter = painterResource(R.drawable.zip_preview),
                     contentDescription = "",
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier

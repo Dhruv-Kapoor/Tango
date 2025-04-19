@@ -15,8 +15,16 @@
         android:theme="@style/Theme.Tango"
         tools:targetApi="31">
         <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_settings"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Tango" />
+        <activity
             android:name=".LeaderboardActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Tango"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

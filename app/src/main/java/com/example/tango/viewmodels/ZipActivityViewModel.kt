@@ -29,7 +29,6 @@ class ZipActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) {
 
     init {
         if (!preview) {
-            val user = _currentUser.value
 
             FirestoreUtils.getLatestZipGrid {
                 _grid.value = it.grid
@@ -40,10 +39,15 @@ class ZipActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) {
                 fetchUserStateAndStopLoading()
             }
 
-            if (user != null) {
-                FirestoreUtils.getAttemptedGridNumbers(GRID_TYPES.ZIP.value, user.id) {
-                    attemptedGridNumbers = it
-                }
+            fetchAttemptedGrids()
+        }
+    }
+
+    override fun fetchAttemptedGrids() {
+        val user = _currentUser.value
+        if (user != null) {
+            FirestoreUtils.getAttemptedGridNumbers(GRID_TYPES.ZIP.value, user.id) {
+                attemptedGridNumbers = it
             }
         }
     }
@@ -76,7 +80,7 @@ class ZipActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) {
         _path.value = path
     }
 
-    fun fetchUserStateAndStopLoading() {
+    override fun fetchUserStateAndStopLoading() {
         val user = _currentUser.value
         if (user != null) {
             FirestoreUtils.getGridState(gridId, user.id) { state ->

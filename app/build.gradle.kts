@@ -16,8 +16,8 @@ android {
         applicationId = "com.example.tango"
         minSdk = 26
         targetSdk = 35
-        versionCode = 15
-        versionName = "1.3.0"
+        versionCode = 16
+        versionName = "1.3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -93,6 +93,7 @@ dependencies {
     implementation(libs.glide.compose)
     implementation(libs.calendar.compose)
     implementation(libs.androidx.navigation.compose)
+    implementation (libs.zhanghai.compose.preference)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

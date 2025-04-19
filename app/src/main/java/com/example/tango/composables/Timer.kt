@@ -8,8 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
@@ -19,6 +17,7 @@ fun Timer(
     modifier: Modifier = Modifier,
     running: Boolean = false,
     ticks: Int = 0,
+    hideClock: Boolean = false,
     onTick: () -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -32,10 +31,12 @@ fun Timer(
             }
         }
     }
-    Text(
-        "%d:%02d".format(ticks / 60, ticks % 60),
-        modifier = modifier
-    )
+    if (!hideClock) {
+        Text(
+            "%d:%02d".format(ticks / 60, ticks % 60),
+            modifier = modifier
+        )
+    }
 }
 
 @Preview

@@ -54,6 +54,7 @@ import com.example.tango.utils.GoogleSignInUtils
 import com.example.tango.utils.Utils.dpToPx
 import com.example.tango.viewmodels.TangoActivityViewModel
 import kotlinx.coroutines.launch
+import me.zhanghai.compose.preference.defaultPreferenceFlow
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Angle
 import nl.dionsegijn.konfetti.core.Party
@@ -135,6 +136,7 @@ fun TangoActivityView(
 
     val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size ?: 1)
     var openCalendarDialog by remember { mutableStateOf(false) }
+    val preferences = defaultPreferenceFlow().collectAsState()
 
     Box(
         modifier = modifier
@@ -154,8 +156,14 @@ fun TangoActivityView(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(modifier = Modifier.width(100.dp), onClick = {}) {
-                        Timer(running = !completed, ticks = ticks) {
+                    if (preferences.value.get<Boolean>("show_timer") == true) {
+                        Button(modifier = Modifier.width(100.dp), onClick = {}) {
+                            Timer(running = !completed, ticks = ticks) {
+                                viewModel.onTick()
+                            }
+                        }
+                    } else {
+                        Timer(running = !completed, ticks = ticks, hideClock = true) {
                             viewModel.onTick()
                         }
                     }
@@ -270,7 +278,7 @@ fun TangoActivityView(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(R.drawable.preview),
+                    painter = painterResource(R.drawable.tango_preview),
                     contentDescription = "",
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier

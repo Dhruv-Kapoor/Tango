@@ -29,8 +29,6 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
 
     init {
         if (!preview) {
-            val user = _currentUser.value
-
             FirestoreUtils.getLatestTangoGrid {
                 _grid.value = it.grid
                 gridId = it.id
@@ -38,16 +36,11 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
                 latestGridData = it
                 fetchUserStateAndStopLoading()
             }
-
-            if (user != null) {
-                FirestoreUtils.getAttemptedGridNumbers(GRID_TYPES.TANGO.value, user.id) {
-                    attemptedGridNumbers = it
-                }
-            }
+            fetchAttemptedGrids()
         }
     }
 
-    fun fetchUserStateAndStopLoading() {
+    override fun fetchUserStateAndStopLoading() {
         val user = _currentUser.value
         if (user != null) {
             FirestoreUtils.getGridState(gridId, user.id) { state ->
@@ -65,6 +58,15 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
             }
         } else {
             _loading.value = false
+        }
+    }
+
+    override fun fetchAttemptedGrids() {
+        val user = _currentUser.value
+        if (user != null) {
+            FirestoreUtils.getAttemptedGridNumbers(GRID_TYPES.TANGO.value, user.id) {
+                attemptedGridNumbers = it
+            }
         }
     }
 

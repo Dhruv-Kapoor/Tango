@@ -25,13 +25,12 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
     val grid = _grid.asStateFlow()
     val undoStack = UndoStack<QueensAction>()
     private var validatorJob: Job? = null
+    private var autoPlaceXEnabled = true
 
     lateinit var latestGridData: Grid<QueensCellData>
 
     init {
         if (!preview) {
-            val user = _currentUser.value
-
             FirestoreUtils.getLatestQueensGrid {
                 _grid.value = it.grid
                 gridId = it.id
@@ -39,15 +38,11 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
                 latestGridData = it
                 fetchUserStateAndStopLoading()
             }
-            if (user != null) {
-                FirestoreUtils.getAttemptedGridNumbers(GRID_TYPES.QUEENS.value, user.id) {
-                    attemptedGridNumbers = it
-                }
-            }
+            fetchAttemptedGrids()
         }
     }
 
-    fun fetchUserStateAndStopLoading() {
+    override fun fetchUserStateAndStopLoading() {
         val user = _currentUser.value
         if (user != null) {
             FirestoreUtils.getGridState(gridId, user.id) { state ->
@@ -66,6 +61,15 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
             }
         } else {
             _loading.value = false
+        }
+    }
+
+    override fun fetchAttemptedGrids() {
+        val user = _currentUser.value
+        if (user != null) {
+            FirestoreUtils.getAttemptedGridNumbers(GRID_TYPES.QUEENS.value, user.id) {
+                attemptedGridNumbers = it
+            }
         }
     }
 
@@ -98,9 +102,11 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
         validatorJob?.cancel()
         val grid = _grid.value
         validatorJob = viewModelScope.launch {
-            autoPlaceX(grid!!, i, j)
+            if (autoPlaceXEnabled) {
+                autoPlaceX(grid!!, i, j)
+            }
             delay(CELL_UPDATE_THROTTLE)
-            if (validateQueensGrid(grid) && !_completed.value) {
+            if (validateQueensGrid(grid!!) && !_completed.value) {
                 onComplete()
             }
         }
@@ -111,7 +117,9 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
         val grid = _grid.value
         if (action != null && grid != null) {
             grid[action.location.first][action.location.second].value = action.oldValue
-            autoPlaceX(grid, action.location.first, action.location.second)
+            if (autoPlaceXEnabled) {
+                autoPlaceX(grid, action.location.first, action.location.second)
+            }
             validateQueensGrid(grid)
         }
     }
@@ -157,4 +165,7 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
         }
     }
 
+    fun enableAutoPlaceX(enabled: Boolean) {
+        autoPlaceXEnabled = enabled
+    }
 }

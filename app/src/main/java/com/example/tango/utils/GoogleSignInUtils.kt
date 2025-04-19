@@ -3,10 +3,12 @@ package com.example.tango.utils
 import android.app.Activity
 import android.content.Context
 import android.util.Log
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import com.example.tango.BuildConfig
 import com.example.tango.TAG
@@ -65,6 +67,22 @@ class GoogleSignInUtils(
             } else {
                 onResult(null)
                 Log.w(TAG, "signInWithCredential:failure", task.exception)
+            }
+        }
+    }
+
+    fun signOut() {
+        val firebaseAuth = Firebase.auth
+        firebaseAuth.signOut()
+
+        scope.launch {
+            try {
+                val clearRequest = ClearCredentialStateRequest()
+                val credentialManager = CredentialManager.create(context)
+                credentialManager.clearCredentialState(clearRequest)
+                onResult(null)
+            } catch (e: ClearCredentialException) {
+                Log.e(TAG, "Couldn't clear user credentials: ${e.localizedMessage}")
             }
         }
     }

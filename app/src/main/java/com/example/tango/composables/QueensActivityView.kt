@@ -57,6 +57,7 @@ import com.example.tango.utils.Utils.dpToPx
 import com.example.tango.utils.Utils.pxToDp
 import com.example.tango.viewmodels.QueensActivityViewModel
 import kotlinx.coroutines.launch
+import me.zhanghai.compose.preference.defaultPreferenceFlow
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Angle
 import nl.dionsegijn.konfetti.core.Party
@@ -85,11 +86,14 @@ fun QueensActivityView(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val activity = LocalActivity.current
+    val preferences = defaultPreferenceFlow().collectAsState()
 
     var openCalendarDialog by remember { mutableStateOf(false) }
 
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp.dpToPx()
     val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size ?: 1)
+
+    viewModel.enableAutoPlaceX(preferences.value.get<Boolean>("auto_place_x") == true)
 
     Box(
         modifier = modifier
@@ -109,8 +113,14 @@ fun QueensActivityView(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(modifier = Modifier.width(100.dp), onClick = {}) {
-                        Timer(running = !completed, ticks = ticks) {
+                    if (preferences.value.get<Boolean>("show_timer") == true) {
+                        Button(modifier = Modifier.width(100.dp), onClick = {}) {
+                            Timer(running = !completed, ticks = ticks) {
+                                viewModel.onTick()
+                            }
+                        }
+                    } else {
+                        Timer(running = !completed, ticks = ticks, hideClock = true) {
                             viewModel.onTick()
                         }
                     }
@@ -232,7 +242,7 @@ fun QueensActivityView(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(R.drawable.preview),
+                    painter = painterResource(R.drawable.queens_preview),
                     contentDescription = "",
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier

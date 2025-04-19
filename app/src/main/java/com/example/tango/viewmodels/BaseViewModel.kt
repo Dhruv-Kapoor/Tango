@@ -118,10 +118,24 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
         _ticks.value++
     }
 
+    open fun fetchUserStateAndStopLoading() {
+        throw RuntimeException("Need to override fetchUserStateAndStopLoading function")
+    }
+
+    open fun fetchAttemptedGrids() {
+        throw RuntimeException("Need to override fetchAttemptedGrids function")
+    }
+
     fun onSignUpCompleted(user: FirebaseUser) {
+        _loading.value = true
         FirestoreUtils.addUser(user)
         updateLoggedIn()
-        pushScore()
+        if (_completed.value) {
+            pushScore()
+        } else {
+            fetchUserStateAndStopLoading()
+        }
+        fetchAttemptedGrids()
     }
 
 }

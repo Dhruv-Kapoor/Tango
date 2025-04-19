@@ -1,5 +1,6 @@
 package com.example.tango
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -39,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -83,6 +85,7 @@ class MainActivity : ComponentActivity() {
         val config by viewModel.config.collectAsState()
         val updateAvailable by viewModel.updateAvailable.collectAsState()
         val uriHandler = LocalUriHandler.current
+        val context = LocalContext.current
 
         val snackbarHostState = remember { SnackbarHostState() }
         val navController = rememberNavController()
@@ -168,7 +171,15 @@ class MainActivity : ComponentActivity() {
                                     fontSize = 32.sp
                                 )
                             }, actions = {
-                                IconButton(onClick = {}) {
+                                IconButton(
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    onClick = {
+                                        context.startActivity(
+                                            Intent(
+                                                context, SettingsActivity::class.java
+                                            )
+                                        )
+                                    }) {
                                     if (currentUser?.profilePicUrl != null) {
                                         GlideImage(
                                             modifier = Modifier
