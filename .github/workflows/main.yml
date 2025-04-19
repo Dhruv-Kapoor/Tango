@@ -34,6 +34,11 @@ jobs:
           base64 --decode keystore.jks > release.keystore
         shell: bash
 
+      - name: Create secrets.properties
+        run: |
+          echo SERVER_CLIENT_ID = \"${{ secrets.SERVER_CLIENT_ID }}\" > secrets.properties
+        shell: bash
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
