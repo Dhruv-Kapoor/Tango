@@ -161,6 +161,7 @@ object FirestoreUtils {
             )
             if (it != null && it["firstAttempt"] != null) {
                 firstAttempt = (it["firstAttempt"] as Long).toInt()
+                firstAttemptOn = it["firstAttemptOn"] as Timestamp
                 val prevBestAttempt = (it["bestAttempt"] as Long).toInt()
                 if (prevBestAttempt < bestAttempt) {
                     bestAttempt = prevBestAttempt
