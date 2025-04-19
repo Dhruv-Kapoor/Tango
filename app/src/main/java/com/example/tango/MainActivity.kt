@@ -54,6 +54,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tango.composables.DeprecatedView
 import com.example.tango.composables.QueensActivity
 import com.example.tango.composables.TangoActivity
+import com.example.tango.composables.ZipActivity
 import com.example.tango.composables.nativeLikeComposable
 import com.example.tango.ui.theme.TangoTheme
 import com.example.tango.viewmodels.BaseViewModel
@@ -110,7 +111,7 @@ class MainActivity : ComponentActivity() {
                                     .height(240.dp)
                             )
                             NavigationDrawerItem(
-                                label = { Text(text = "Tango") },
+                                label = { Text(text = Routes.Tango.label) },
                                 selected = currentScreen == Routes.Tango.route,
                                 shape = RoundedCornerShape(8.dp),
                                 onClick = {
@@ -122,11 +123,23 @@ class MainActivity : ComponentActivity() {
                                     }
                                 })
                             NavigationDrawerItem(
-                                label = { Text(text = "Queens") },
+                                label = { Text(text = Routes.Queens.label) },
                                 selected = currentScreen == Routes.Queens.route,
                                 shape = RoundedCornerShape(8.dp),
                                 onClick = {
                                     navController.navigate(Routes.Queens.route) {
+                                        launchSingleTop = true
+                                    }
+                                    scope.launch {
+                                        drawerState.close()
+                                    }
+                                })
+                            NavigationDrawerItem(
+                                label = { Text(text = Routes.Zip.label) },
+                                selected = currentScreen == Routes.Zip.route,
+                                shape = RoundedCornerShape(8.dp),
+                                onClick = {
+                                    navController.navigate(Routes.Zip.route) {
                                         launchSingleTop = true
                                     }
                                     scope.launch {
@@ -149,7 +162,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }, title = {
                                 Text(
-                                    text = if (currentScreen == Routes.Tango.route) "Tango" else "Queens",
+                                    text = Routes.getRoute(currentScreen ?: "").label,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily.Cursive,
                                     fontSize = 32.sp
@@ -186,6 +199,9 @@ class MainActivity : ComponentActivity() {
                             }
                             nativeLikeComposable(route = Routes.Queens.route) {
                                 QueensActivity(snackbarHostState = snackbarHostState)
+                            }
+                            nativeLikeComposable(route = Routes.Zip.route) {
+                                ZipActivity(snackbarHostState = snackbarHostState)
                             }
                         }
 

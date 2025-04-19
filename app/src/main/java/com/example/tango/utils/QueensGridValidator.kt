@@ -3,7 +3,7 @@ package com.example.tango.utils
 import com.example.tango.dataClasses.QueensCellData
 import com.example.tango.dataClasses.QueensCellValue
 
-fun checkSurroundingCells(grid: Array<Array<QueensCellData>>, i: Int, j: Int): Set<Pair<Int, Int>> {
+fun checkSurroundingCells(grid: Array<Array<QueensCellData>>): Set<Pair<Int, Int>> {
     val invalidCells = hashSetOf<Pair<Int, Int>>()
     for (i in grid.indices) {
         for (j in grid[i].indices) {
@@ -70,8 +70,8 @@ fun checkColors(grid: Array<Array<QueensCellData>>): Set<Int> {
     return invalidColors
 }
 
-fun validateQueensGrid(grid: Array<Array<QueensCellData>>, i: Int, j: Int): Boolean {
-    val invalidCells = checkSurroundingCells(grid, i, j)
+fun validateQueensGrid(grid: Array<Array<QueensCellData>>): Boolean {
+    val invalidCells = checkSurroundingCells(grid)
     val invalidRows = checkRows(grid)
     val invalidCols = checkCols(grid)
     val invalidColors = checkColors(grid)

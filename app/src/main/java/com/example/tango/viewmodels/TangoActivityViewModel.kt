@@ -57,6 +57,8 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
                     _ticks.value = (state["timeTaken"] as Long).toInt()
                     if (_completed.value) {
                         _started.value = true
+                    } else {
+                        validateTangoGrid(_grid.value!!)
                     }
                 }
                 _loading.value = false
@@ -94,12 +96,12 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
             validatorJob?.cancel()
             validatorJob = viewModelScope.launch {
                 delay(CELL_UPDATE_THROTTLE)
-                if (validateTangoGrid(_grid.value!!, i, j) && !completed.value) {
+                if (validateTangoGrid(_grid.value!!) && !completed.value) {
                     onComplete()
                 }
             }
         } else {
-            if (validateTangoGrid(_grid.value!!, i, j) && !completed.value) {
+            if (validateTangoGrid(_grid.value!!) && !completed.value) {
                 onComplete()
             }
         }
@@ -110,7 +112,7 @@ class TangoActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) 
         val grid = _grid.value
         if (action != null && grid != null) {
             grid[action.location.first][action.location.second].value = action.oldValue
-            validateTangoGrid(grid, action.location.first, action.location.second)
+            validateTangoGrid(grid)
         }
     }
 

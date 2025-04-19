@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun stripedBackground(bgColor: Color = Color.White): Brush {
+fun stripedBackground(bgColor: Color = Color.Transparent): Brush {
     val stripeSize = with(LocalDensity.current) {
         4.dp.toPx()
     }

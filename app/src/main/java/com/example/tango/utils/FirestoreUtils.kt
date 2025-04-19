@@ -7,6 +7,7 @@ import com.example.tango.dataClasses.LeaderboardItem
 import com.example.tango.dataClasses.QueensCellData
 import com.example.tango.dataClasses.TangoCellData
 import com.example.tango.dataClasses.User
+import com.example.tango.dataClasses.ZipCellData
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
@@ -17,7 +18,6 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import java.time.LocalDate
 import java.time.ZoneId
 
 object FirestoreUtils {
@@ -40,6 +40,10 @@ object FirestoreUtils {
         val grid = Gson.getGson().fromJson(gridStr, Array<Array<QueensCellData>>::class.java)
         populateQueensGrid(grid)
         return grid
+    }
+
+    fun parseZipGridStr(gridStr: String): Array<Array<ZipCellData>> {
+        return Gson.getGson().fromJson(gridStr, Array<Array<ZipCellData>>::class.java)
     }
 
     fun convertGridToStr(grid: Array<Array<Any>>): String {
@@ -101,6 +105,24 @@ object FirestoreUtils {
             }
     }
 
+    fun getLatestZipGrid(callback: (Grid<ZipCellData>) -> Unit) {
+        getDb().collection(COLLECTIONS.GRIDS.value).whereEqualTo("type", GRID_TYPES.ZIP.value)
+            .orderBy("date", Query.Direction.DESCENDING)
+            .limit(1).get().addOnCompleteListener() {
+                val gridDoc = it.result.documents[0]
+                val gridStr = gridDoc.data?.get("grid") as String
+                val grid = parseZipGridStr(gridStr)
+                callback(
+                    Grid<ZipCellData>(
+                        id = gridDoc.id,
+                        grid = grid,
+                        date = (gridDoc.data?.get("date") as Timestamp).toInstant()
+                            .atZone(ZoneId.systemDefault()).toLocalDate(),
+                        number = (gridDoc.data?.get("number") as Long).toInt()
+                    )
+                )
+            }
+    }
 
     fun addUser(user: FirebaseUser) {
         getDb().collection(COLLECTIONS.USERS.value).document(user.uid).set(
@@ -271,6 +293,7 @@ object FirestoreUtils {
                 val gridStr = gridDoc.data?.get("grid") as String
                 val grid = when (type) {
                     GRID_TYPES.QUEENS.value -> parseQueensGridStr(gridStr)
+                    GRID_TYPES.ZIP.value -> parseZipGridStr(gridStr)
                     else -> parseTangoGridStr(gridStr)
                 } as Array<Array<T>>
                 onResult(

@@ -2,6 +2,7 @@ package com.example.tango.utils
 
 class TangoAction(val oldValue: Int, val location: Pair<Int, Int>)
 class QueensAction(val oldValue: Int, val location: Pair<Int, Int>)
+class ZipAction(val path: List<Pair<Int, Int>>)
 
 class UndoStack<T>(
     val maxSize: Int = 1000

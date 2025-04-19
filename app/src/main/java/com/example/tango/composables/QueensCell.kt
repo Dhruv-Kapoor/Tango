@@ -20,6 +20,7 @@ import com.example.tango.QUEENS_EDGE_THICKNESS_FACTOR
 import com.example.tango.R
 import com.example.tango.dataClasses.QueensCellData
 import com.example.tango.dataClasses.QueensCellValue
+import com.example.tango.utils.Utils.conditional
 import com.example.tango.utils.Utils.dpToPx
 import com.example.tango.utils.Utils.pxToDp
 
@@ -31,14 +32,12 @@ fun QueensCell(
     var cellData = remember { cellData }
     val cellSizeInDp = cellSize.pxToDp()
 
-    var modifier = if (cellData.containsError) {
-        Modifier.background(stripedBackground(cellData.getColor()))
-    } else {
-        Modifier.background(cellData.getColor())
-    }
-
     Box(
-        contentAlignment = Alignment.Center, modifier = modifier
+        contentAlignment = Alignment.Center, modifier = Modifier
+            .background(cellData.getColor())
+            .conditional(cellData.containsError) {
+                background(stripedBackground())
+            }
             .clickable(
                 enabled = !disabled, onClick = onClick
             )

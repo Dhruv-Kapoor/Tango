@@ -83,6 +83,7 @@ fun <T> Grid(
                                 if (coordinates != currentTouchedCoordinates) {
                                     onDrag?.invoke(coordinates)
                                 }
+                                currentTouchedCoordinates = coordinates
                             },
                             onDragEnd = {
                                 onDragEnd?.invoke()

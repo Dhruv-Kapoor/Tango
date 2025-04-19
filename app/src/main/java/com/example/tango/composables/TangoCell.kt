@@ -31,6 +31,7 @@ import com.example.tango.SYMBOL_SIZE
 import com.example.tango.dataClasses.SYMBOLS
 import com.example.tango.dataClasses.TangoCellData
 import com.example.tango.dataClasses.TangoCellValue
+import com.example.tango.utils.Utils.conditional
 import com.example.tango.utils.Utils.pxToDp
 
 @Composable
@@ -52,17 +53,18 @@ fun TangoCell(
         rememberVectorPainter(image = ImageVector.vectorResource(id = R.drawable.equals))
     var cellData = remember { cellData }
 
-    val bgColor = if (cellData.disabled) colorResource(R.color.disabled_bg) else Color.White
-    var modifier = if (cellData.containsError) {
-        Modifier.background(stripedBackground(bgColor))
-    } else {
-        Modifier.background(bgColor)
-    }
-
     Box(
-        contentAlignment = Alignment.Center, modifier = modifier.clickable(
-            enabled = !disabled && !cellData.disabled, onClick = onClick
-        )
+        contentAlignment = Alignment.Center, modifier = Modifier
+            .background(Color.White)
+            .conditional(cellData.disabled) {
+                background(colorResource(R.color.disabled_bg))
+            }
+            .conditional(cellData.containsError) {
+                background(stripedBackground())
+            }
+            .clickable(
+                enabled = !disabled && !cellData.disabled, onClick = onClick
+            )
     ) {
         Canvas(modifier = Modifier.size(cellSizeInDp)) {
             val canvasWidth = size.width

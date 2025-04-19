@@ -98,7 +98,7 @@ fun checkCols(grid: Array<Array<TangoCellData>>): Set<Int> {
     return invalidCols
 }
 
-fun validateTangoGrid(grid: Array<Array<TangoCellData>>, i: Int, j: Int): Boolean {
+fun validateTangoGrid(grid: Array<Array<TangoCellData>>): Boolean {
     val invalidCells = checkCells(grid)
     val invalidRows = checkRows(grid)
     val invalidCols = checkCols(grid)

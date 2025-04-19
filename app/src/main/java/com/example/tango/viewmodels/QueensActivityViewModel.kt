@@ -58,6 +58,8 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
                     _ticks.value = (state["timeTaken"] as Long).toInt()
                     if (_completed.value) {
                         _started.value = true
+                    } else {
+                        validateQueensGrid(_grid.value!!)
                     }
                 }
                 _loading.value = false
@@ -98,7 +100,7 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
         validatorJob = viewModelScope.launch {
             autoPlaceX(grid!!, i, j)
             delay(CELL_UPDATE_THROTTLE)
-            if (validateQueensGrid(grid, i, j) && !_completed.value) {
+            if (validateQueensGrid(grid) && !_completed.value) {
                 onComplete()
             }
         }
@@ -110,7 +112,7 @@ class QueensActivityViewModel(preview: Boolean = false) : BaseViewModel(preview)
         if (action != null && grid != null) {
             grid[action.location.first][action.location.second].value = action.oldValue
             autoPlaceX(grid, action.location.first, action.location.second)
-            validateQueensGrid(grid, action.location.first, action.location.second)
+            validateQueensGrid(grid)
         }
     }
 
