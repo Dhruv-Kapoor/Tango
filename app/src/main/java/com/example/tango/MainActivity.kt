@@ -269,7 +269,8 @@ class MainActivity : ComponentActivity() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener {
             FirestoreUtils.pushMessagingToken(
                 it.result, mapOf(
-                    "lastAccessedAt" to Timestamp.now()
+                    "lastAccessedAt" to Timestamp.now(),
+                    "currentAppVersion" to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
                 )
             )
         }
