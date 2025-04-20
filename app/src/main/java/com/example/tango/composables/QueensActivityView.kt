@@ -93,7 +93,7 @@ fun QueensActivityView(
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp.dpToPx()
     val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size ?: 1)
 
-    viewModel.enableAutoPlaceX(preferences.value.get<Boolean>("auto_place_x") == true)
+    viewModel.enableAutoPlaceX(preferences.value.get<Boolean>("auto_place_x") != false)
 
     Box(
         modifier = modifier
@@ -113,7 +113,7 @@ fun QueensActivityView(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (preferences.value.get<Boolean>("show_timer") == true) {
+                    if (preferences.value.get<Boolean>("show_timer") != false) {
                         Button(modifier = Modifier.width(100.dp), onClick = {}) {
                             Timer(running = !completed, ticks = ticks) {
                                 viewModel.onTick()

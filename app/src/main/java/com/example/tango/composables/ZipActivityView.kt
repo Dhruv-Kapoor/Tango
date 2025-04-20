@@ -109,7 +109,7 @@ fun ZipActivityView(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (preferences.value.get<Boolean>("show_timer") == true) {
+                    if (preferences.value.get<Boolean>("show_timer") != false) {
                         Button(modifier = Modifier.width(100.dp), onClick = {}) {
                             Timer(running = !completed, ticks = ticks) {
                                 viewModel.onTick()
