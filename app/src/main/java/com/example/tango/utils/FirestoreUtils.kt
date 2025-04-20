@@ -25,7 +25,8 @@ object FirestoreUtils {
     private const val TAG = "FirestoreUtils"
 
     enum class COLLECTIONS(val value: String) {
-        GRIDS("grids"), USERS("users"), PARTICIPANTS("participants"), CONFIG("config")
+        GRIDS("grids"), USERS("users"), PARTICIPANTS("participants"), CONFIG("config"),
+        ANONYMOUS_USERS("anonymousUsers")
     }
 
     private fun getDb(): FirebaseFirestore {
@@ -131,7 +132,8 @@ object FirestoreUtils {
                 Pair("name", user.displayName),
                 Pair("profilePic", user.photoUrl),
                 Pair("email", user.email),
-            )
+            ),
+            SetOptions.merge()
         )
     }
 
@@ -307,5 +309,23 @@ object FirestoreUtils {
                     )
                 )
             }
+    }
+
+    fun pushMessagingToken(token: String, extraData: Map<String, Any>? = null) {
+        val user = Firebase.auth.currentUser
+        if (user != null) {
+            getDb().collection(COLLECTIONS.USERS.value).document(user.uid).set(
+                mapOf(
+                    "fcmToken" to token
+                ).plus(extraData ?: mapOf()),
+                SetOptions.merge()
+            )
+        } else {
+            getDb().collection(COLLECTIONS.ANONYMOUS_USERS.value).document(token).set(
+                mapOf(
+                    "fcmToken" to token
+                ).plus(extraData ?: mapOf()),
+            )
+        }
     }
 }

@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.preference.PreferenceManager
 import com.example.tango.LeaderboardActivity
 import com.example.tango.QUEENS_EDGE_THICKNESS_FACTOR
 import com.example.tango.R
@@ -57,7 +58,7 @@ import com.example.tango.utils.Utils.dpToPx
 import com.example.tango.utils.Utils.pxToDp
 import com.example.tango.viewmodels.QueensActivityViewModel
 import kotlinx.coroutines.launch
-import me.zhanghai.compose.preference.defaultPreferenceFlow
+import me.zhanghai.compose.preference.getPreferenceFlow
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Angle
 import nl.dionsegijn.konfetti.core.Party
@@ -86,7 +87,9 @@ fun QueensActivityView(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val activity = LocalActivity.current
-    val preferences = defaultPreferenceFlow().collectAsState()
+
+    val preferencesFlow = PreferenceManager.getDefaultSharedPreferences(context).getPreferenceFlow()
+    val preferences = preferencesFlow.collectAsState()
 
     var openCalendarDialog by remember { mutableStateOf(false) }
 

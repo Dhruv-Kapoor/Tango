@@ -1,11 +1,14 @@
 package com.example.tango
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,6 +49,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -59,7 +63,10 @@ import com.example.tango.composables.TangoActivity
 import com.example.tango.composables.ZipActivity
 import com.example.tango.composables.nativeLikeComposable
 import com.example.tango.ui.theme.TangoTheme
+import com.example.tango.utils.FirestoreUtils
 import com.example.tango.viewmodels.BaseViewModel
+import com.google.firebase.Timestamp
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 
 const val TAG = "MainActivity"
@@ -72,6 +79,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             MainActivityView()
         }
+        askNotificationPermission()
+        updateUserDetails()
     }
 
 
@@ -236,6 +245,33 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+        }
+    }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { isGranted: Boolean ->
+    }
+
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private fun updateUserDetails() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener {
+            FirestoreUtils.pushMessagingToken(
+                it.result, mapOf(
+                    "lastAccessedAt" to Timestamp.now()
+                )
+            )
         }
     }
 }

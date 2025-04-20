@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.preference.PreferenceManager
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.example.tango.LeaderboardActivity
 import com.example.tango.R
@@ -54,7 +55,7 @@ import com.example.tango.utils.GoogleSignInUtils
 import com.example.tango.utils.Utils.dpToPx
 import com.example.tango.viewmodels.TangoActivityViewModel
 import kotlinx.coroutines.launch
-import me.zhanghai.compose.preference.defaultPreferenceFlow
+import me.zhanghai.compose.preference.getPreferenceFlow
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Angle
 import nl.dionsegijn.konfetti.core.Party
@@ -136,7 +137,8 @@ fun TangoActivityView(
 
     val cellSize = (screenWidth - 32.dp.dpToPx()) / (grid?.size ?: 1)
     var openCalendarDialog by remember { mutableStateOf(false) }
-    val preferences = defaultPreferenceFlow().collectAsState()
+    val preferencesFlow = PreferenceManager.getDefaultSharedPreferences(context).getPreferenceFlow()
+    val preferences = preferencesFlow.collectAsState()
 
     Box(
         modifier = modifier

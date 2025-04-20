@@ -1,6 +1,8 @@
 package com.example.tango
 
 import android.content.Intent
+import android.content.SharedPreferences
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -47,23 +49,30 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.preference.PreferenceManager
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tango.dataClasses.User
 import com.example.tango.ui.theme.TangoTheme
 import com.example.tango.utils.GoogleSignInUtils
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
+import me.zhanghai.compose.preference.getPreferenceFlow
 import me.zhanghai.compose.preference.switchPreference
 
-class SettingsActivity : ComponentActivity() {
+class SettingsActivity : ComponentActivity(), OnSharedPreferenceChangeListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             SettingsActivityView()
         }
+
+        PreferenceManager.getDefaultSharedPreferences(this)
+            .registerOnSharedPreferenceChangeListener(this)
     }
 
     @Preview
@@ -81,6 +90,9 @@ class SettingsActivity : ComponentActivity() {
             null -> null
             else -> User.fromFirebaseUser(firebaseUser)
         }
+
+        val preferencesFlow =
+            PreferenceManager.getDefaultSharedPreferences(context).getPreferenceFlow()
 
         TangoTheme {
             Scaffold(
@@ -142,7 +154,9 @@ class SettingsActivity : ComponentActivity() {
                 snackbarHost = { SnackbarHost(snackbarHostState) }
             ) { padding ->
                 Box(modifier = Modifier.padding(padding)) {
-                    ProvidePreferenceLocals {
+                    ProvidePreferenceLocals(
+                        flow = preferencesFlow
+                    ) {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -195,13 +209,13 @@ class SettingsActivity : ComponentActivity() {
                                 key = "dark_mode",
                                 defaultValue = false,
                                 title = { Text(text = "Dark Mode") },
-                                summary = { Text(text = if (it) "On" else "Off") }
+                                summary = { Text(text = if (it) "Enabled (not supported)" else "Disabled") }
                             )
                             switchPreference(
                                 key = "show_timer",
                                 defaultValue = true,
                                 title = { Text(text = "Show Timer") },
-                                summary = { Text(text = if (it) "On" else "Off") }
+                                summary = { Text(text = if (it) "Shown" else "Hidden") }
                             )
                             item {
                                 Spacer(Modifier.size(16.dp))
@@ -214,7 +228,21 @@ class SettingsActivity : ComponentActivity() {
                                 key = "auto_place_x",
                                 defaultValue = true,
                                 title = { Text(text = "Auto Place X") },
-                                summary = { Text(text = if (it) "On" else "Off") }
+                                summary = { Text(text = if (it) "Enabled" else "Disabled") }
+                            )
+
+                            item {
+                                Spacer(Modifier.size(16.dp))
+                            }
+                            item {
+                                Text("Notifications", fontSize = 12.sp, color = Color.Gray)
+                                HorizontalDivider()
+                            }
+                            switchPreference(
+                                key = "new_level_notifications_enabled",
+                                defaultValue = true,
+                                title = { Text(text = "New Levels") },
+                                summary = { Text(text = if (it) "Enabled" else "Receive notifications when new levels are available") }
                             )
 
                             item {
@@ -231,6 +259,29 @@ class SettingsActivity : ComponentActivity() {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    override fun onSharedPreferenceChanged(
+        preferences: SharedPreferences?,
+        key: String?
+    ) {
+        when (key) {
+            "new_level_notifications_enabled" -> {
+                if (preferences?.getBoolean("new_level_notifications_enabled", true) == false) {
+                    Firebase.messaging.unsubscribeFromTopic("new_levels")
+                    FirebaseAnalytics.getInstance(this)
+                        .logEvent("unsubscribed_from_topic__new_levels", Bundle().apply {
+                            putString("userId", Firebase.auth.uid)
+                        })
+                } else {
+                    Firebase.messaging.subscribeToTopic("new_levels")
+                    FirebaseAnalytics.getInstance(this)
+                        .logEvent("subscribe_to_topic__new_levels", Bundle().apply {
+                            putString("userId", Firebase.auth.uid)
+                        })
                 }
             }
         }

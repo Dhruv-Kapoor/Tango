@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.messaging)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation (libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -96,6 +97,7 @@ dependencies {
     implementation(libs.calendar.compose)
     implementation(libs.androidx.navigation.compose)
     implementation (libs.zhanghai.compose.preference)
+    implementation(libs.androidx.preference.ktx)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
