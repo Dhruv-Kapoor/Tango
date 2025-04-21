@@ -137,7 +137,7 @@ class ZipActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) {
                 grid[path[i].first][path[i].second].pathPosition = null
             }
             _path.value =
-                path.dropLast(path.size - cell.pathPosition!! - 1) as ArrayList<Pair<Int, Int>>
+                ArrayList(path.dropLast(path.size - cell.pathPosition!! - 1).toMutableList())
         }
     }
 
@@ -153,7 +153,7 @@ class ZipActivityViewModel(preview: Boolean = false) : BaseViewModel(preview) {
             action.path.forEachIndexed { i, coordinates ->
                 grid[coordinates.first][coordinates.second].pathPosition = i
             }
-            _path.value = action.path as ArrayList<Pair<Int, Int>>
+            _path.value = ArrayList(action.path)
         }
     }
 
