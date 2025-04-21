@@ -54,6 +54,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tango.dataClasses.User
 import com.example.tango.ui.theme.TangoTheme
+import com.example.tango.utils.FirestoreUtils
 import com.example.tango.utils.GoogleSignInUtils
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.ktx.auth
@@ -244,6 +245,12 @@ class SettingsActivity : ComponentActivity(), OnSharedPreferenceChangeListener {
                                 title = { Text(text = "New Levels") },
                                 summary = { Text(text = if (it) "Enabled" else "Receive notifications when new levels are available") }
                             )
+                            switchPreference(
+                                key = "broadcast_enabled",
+                                defaultValue = true,
+                                title = { Text(text = "Broadcast") },
+                                summary = { Text(text = if (it) "Enabled" else "Send/Receive updates when users complete levels") }
+                            )
 
                             item {
                                 Spacer(Modifier.size(32.dp))
@@ -268,6 +275,7 @@ class SettingsActivity : ComponentActivity(), OnSharedPreferenceChangeListener {
         preferences: SharedPreferences?,
         key: String?
     ) {
+        FirestoreUtils.updateUserPreferences(preferences?.all)
         when (key) {
             "new_level_notifications_enabled" -> {
                 if (preferences?.getBoolean("new_level_notifications_enabled", true) == false) {
@@ -280,6 +288,22 @@ class SettingsActivity : ComponentActivity(), OnSharedPreferenceChangeListener {
                     Firebase.messaging.subscribeToTopic("new_levels")
                     FirebaseAnalytics.getInstance(this)
                         .logEvent("subscribe_to_topic__new_levels", Bundle().apply {
+                            putString("userId", Firebase.auth.uid)
+                        })
+                }
+            }
+
+            "broadcast_enabled" -> {
+                if (preferences?.getBoolean("broadcast_enabled", true) == false) {
+                    Firebase.messaging.unsubscribeFromTopic("broadcast")
+                    FirebaseAnalytics.getInstance(this)
+                        .logEvent("unsubscribed_from_topic__broadcast", Bundle().apply {
+                            putString("userId", Firebase.auth.uid)
+                        })
+                } else {
+                    Firebase.messaging.subscribeToTopic("broadcast")
+                    FirebaseAnalytics.getInstance(this)
+                        .logEvent("subscribe_to_topic__broadcast", Bundle().apply {
                             putString("userId", Firebase.auth.uid)
                         })
                 }

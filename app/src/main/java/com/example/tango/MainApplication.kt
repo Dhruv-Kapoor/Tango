@@ -25,5 +25,12 @@ class MainApplication : Application() {
                     putString("userId", Firebase.auth.uid)
                 })
         }
+        if (preferences.getBoolean("broadcast_enabled", true)) {
+            Firebase.messaging.subscribeToTopic("broadcast")
+            FirebaseAnalytics.getInstance(this)
+                .logEvent("subscribe_to_topic__broadcast", Bundle().apply {
+                    putString("userId", Firebase.auth.uid)
+                })
+        }
     }
 }

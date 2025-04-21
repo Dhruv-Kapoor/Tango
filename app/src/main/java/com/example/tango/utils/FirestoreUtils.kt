@@ -328,4 +328,16 @@ object FirestoreUtils {
             )
         }
     }
+
+    fun updateUserPreferences(preferences: MutableMap<String, *>?) {
+        val user = Firebase.auth.currentUser
+        if (user != null && preferences != null) {
+            getDb().collection(COLLECTIONS.USERS.value).document(user.uid).set(
+                mapOf(
+                    "preferences" to preferences
+                ),
+                SetOptions.merge()
+            )
+        }
+    }
 }
