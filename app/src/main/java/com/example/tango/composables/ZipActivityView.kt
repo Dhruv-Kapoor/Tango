@@ -99,104 +99,101 @@ fun ZipActivityView(
             .fillMaxSize()
     ) {
         if (!loading && started) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.1f)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (preferences.value.get<Boolean>("show_timer") != false) {
-                        Button(modifier = Modifier.width(100.dp), onClick = {}) {
-                            Timer(running = !completed, ticks = ticks) {
-                                viewModel.onTick()
+            Column {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (preferences.value.get<Boolean>("show_timer") != false) {
+                                Button(modifier = Modifier.width(100.dp), onClick = {}) {
+                                    Timer(running = !completed, ticks = ticks) {
+                                        viewModel.onTick()
+                                    }
+                                }
+                            } else {
+                                Timer(running = !completed, ticks = ticks, hideClock = true) {
+                                    viewModel.onTick()
+                                }
+                            }
+                            Button(
+                                contentPadding = PaddingValues(start = 24.dp, end = 20.dp),
+                                onClick = {
+                                    openCalendarDialog = true
+                                }) {
+                                Text("#${viewModel.gridNumber}")
+                                Spacer(Modifier.size(12.dp))
+                                Icon(
+                                    modifier = Modifier.size(16.dp),
+                                    painter = painterResource(R.drawable.switch_icon),
+                                    contentDescription = null
+                                )
+                            }
+                            Button(modifier = Modifier.width(100.dp), onClick = {
+                                viewModel.resetGrid()
+                            }) {
+                                Text(if (completed) "Reset" else "Clear")
                             }
                         }
-                    } else {
-                        Timer(running = !completed, ticks = ticks, hideClock = true) {
-                            viewModel.onTick()
+                        ZipGrid(
+                            grid,
+                            cellSize = cellSize.toInt().pxToDp(),
+                            enableDragging = true,
+                            path = path,
+                            onDragStart = {
+                                viewModel.onDragStart(it)
+                            },
+                            onDrag = {
+                                viewModel.onDrag(it)
+                            },
+                            onDragEnd = {
+                                viewModel.onDragEnd()
+                            }
+                        ) { cell, i, j, drawBorders, drawContent ->
+                            if (drawBorders) {
+                                ZipCellBorders(cell, cellSize.toInt())
+                            }
+                            if (drawContent) {
+                                ZipCell(cell, completed, cellSize.toInt()) {
+                                    viewModel.onCellUpdate(cell, i, j)
+                                }
+                            }
                         }
-                    }
-                    Button(contentPadding = PaddingValues(start = 24.dp, end = 20.dp), onClick = {
-                        openCalendarDialog = true
-                    }) {
-                        Text("#${viewModel.gridNumber}")
-                        Spacer(Modifier.size(12.dp))
-                        Icon(
-                            modifier = Modifier.size(16.dp),
-                            painter = painterResource(R.drawable.switch_icon),
-                            contentDescription = null
-                        )
-                    }
-                    Button(modifier = Modifier.width(100.dp), onClick = {
-                        viewModel.resetGrid()
-                    }) {
-                        Text(if (completed) "Reset" else "Clear")
-                    }
-                }
-                ZipGrid(
-                    grid,
-                    cellSize = cellSize.toInt().pxToDp(),
-                    enableDragging = true,
-                    path = path,
-                    onDragStart = {
-                        viewModel.onDragStart(it)
-                    },
-                    onDrag = {
-                        viewModel.onDrag(it)
-                    },
-                    onDragEnd = {
-                        viewModel.onDragEnd()
-                    }
-                ) { cell, i, j, drawBorders, drawContent ->
-                    if (drawBorders) {
-                        ZipCellBorders(cell, cellSize.toInt())
-                    }
-                    if (drawContent) {
-                        ZipCell(cell, completed, cellSize.toInt()) {
-                            viewModel.onCellUpdate(cell, i, j)
-                        }
-                    }
-                }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        enabled = !viewModel.undoStack.isEmpty() && !completed,
-                        onClick = {
-                            viewModel.onUndo()
-                        }) { Text("Undo") }
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Button(modifier = Modifier.weight(1f), onClick = {
-                        scope.launch {
-                            snackbarHostState?.currentSnackbarData?.dismiss()
-                            snackbarHostState?.showSnackbar(
-                                "huh",
-                                duration = SnackbarDuration.Short
-                            )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                enabled = !viewModel.undoStack.isEmpty() && !completed,
+                                onClick = {
+                                    viewModel.onUndo()
+                                }) { Text("Undo") }
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Button(modifier = Modifier.weight(1f), onClick = {
+                                scope.launch {
+                                    snackbarHostState?.currentSnackbarData?.dismiss()
+                                    snackbarHostState?.showSnackbar(
+                                        "huh",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
+                            }) { Text("Stuck?") }
                         }
-                    }) { Text("Stuck?") }
+                    }
+
                 }
-            }
-            Box(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.BottomStart)
-            ) {
                 ElevatedButton(
                     modifier = Modifier
-                        .fillMaxWidth(), onClick = {
+                        .fillMaxWidth()
+                        .padding(16.dp), onClick = {
                         if (isLoggedIn) {
                             context.startActivity(
                                 Intent(
