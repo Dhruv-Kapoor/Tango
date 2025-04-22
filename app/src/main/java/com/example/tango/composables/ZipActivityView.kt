@@ -142,7 +142,7 @@ fun ZipActivityView(
                         ZipGrid(
                             grid,
                             cellSize = cellSize.toInt().pxToDp(),
-                            enableDragging = true,
+                            enableDragging = !completed,
                             path = path,
                             onDragStart = {
                                 viewModel.onDragStart(it)
