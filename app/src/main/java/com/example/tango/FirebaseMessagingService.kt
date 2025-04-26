@@ -7,6 +7,6 @@ class CustomFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        FirestoreUtils.pushMessagingToken(token)
+        FirestoreUtils.pushMessagingTokenAndUpdateUserDetails(token)
     }
 }

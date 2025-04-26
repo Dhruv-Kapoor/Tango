@@ -42,8 +42,8 @@ import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kizitonwose.calendar.core.yearMonth
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.YearMonth
 import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlin.random.Random
 
@@ -123,11 +123,11 @@ fun Calendar(
     onDayClick: (Int) -> Unit,
 ) {
     fun getNumber(date: LocalDate): Int {
-        return maxNumber - (maxDate.dayOfYear - date.dayOfYear)
+        return maxNumber - ChronoUnit.DAYS.between(date, maxDate).toInt()
     }
 
     fun getDateFromNumber(number: Int): LocalDate {
-        return maxDate.plusDays((maxNumber - number).toLong())
+        return maxDate.plusDays((number - maxNumber).toLong())
     }
 
     val currentMonth = remember { getDateFromNumber(selectedNumber).yearMonth }

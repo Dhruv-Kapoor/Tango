@@ -1,6 +1,7 @@
 package com.example.tango.utils
 
 import android.util.Log
+import com.example.tango.BuildConfig
 import com.example.tango.GRID_TYPES
 import com.example.tango.dataClasses.Grid
 import com.example.tango.dataClasses.LeaderboardItem
@@ -311,20 +312,26 @@ object FirestoreUtils {
             }
     }
 
-    fun pushMessagingToken(token: String, extraData: Map<String, Any>? = null) {
+    fun pushMessagingTokenAndUpdateUserDetails(token: String) {
         val user = Firebase.auth.currentUser
+        val otherDetails = mapOf(
+            "lastAccessedAt" to Timestamp.now(),
+            "currentAppVersion" to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+        )
         if (user != null) {
             getDb().collection(COLLECTIONS.USERS.value).document(user.uid).set(
                 mapOf(
-                    "fcmToken" to token
-                ).plus(extraData ?: mapOf()),
+                    "fcmToken" to token,
+                    "name" to user.displayName,
+                    "profilePic" to user.photoUrl
+                ).plus(otherDetails),
                 SetOptions.merge()
             )
         } else {
             getDb().collection(COLLECTIONS.ANONYMOUS_USERS.value).document(token).set(
                 mapOf(
                     "fcmToken" to token
-                ).plus(extraData ?: mapOf()),
+                ).plus(otherDetails),
             )
         }
     }

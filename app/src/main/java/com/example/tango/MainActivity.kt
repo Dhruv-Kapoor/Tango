@@ -65,7 +65,6 @@ import com.example.tango.composables.nativeLikeComposable
 import com.example.tango.ui.theme.TangoTheme
 import com.example.tango.utils.FirestoreUtils
 import com.example.tango.viewmodels.BaseViewModel
-import com.google.firebase.Timestamp
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 
@@ -211,7 +210,8 @@ class MainActivity : ComponentActivity() {
 
                         NavHost(
                             navController = navController,
-                            startDestination = Routes.Tango.route,
+                            startDestination = intent?.getStringExtra("route")
+                                ?: Routes.Tango.route,
                             modifier = Modifier.padding(padding),
                         ) {
                             nativeLikeComposable(route = Routes.Tango.route) {
@@ -267,11 +267,8 @@ class MainActivity : ComponentActivity() {
 
     private fun updateUserDetails() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener {
-            FirestoreUtils.pushMessagingToken(
-                it.result, mapOf(
-                    "lastAccessedAt" to Timestamp.now(),
-                    "currentAppVersion" to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-                )
+            FirestoreUtils.pushMessagingTokenAndUpdateUserDetails(
+                it.result
             )
         }
     }
