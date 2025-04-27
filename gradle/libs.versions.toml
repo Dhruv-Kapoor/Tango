@@ -42,6 +42,7 @@ calendar-compose = { module = "com.kizitonwose.calendar:compose", version.ref = 
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-perf = { module = "com.google.firebase:firebase-perf" }
 glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glideCompose" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
     id("com.google.firebase.crashlytics")
+    id("com.google.firebase.firebase-perf")
 }
 
 android {
@@ -16,8 +17,8 @@ android {
         applicationId = "com.example.tango"
         minSdk = 26
         targetSdk = 35
-        versionCode = 23
-        versionName = "1.4.4"
+        versionCode = 24
+        versionName = "1.4.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -75,15 +76,20 @@ dependencies {
     implementation(libs.konfetti.compose)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.gson)
+
+    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.perf)
+    implementation(libs.firebase.auth)
+
+    // Lifecycle
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation (libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.firebase.auth)
 
     // Also add the dependencies for the Credential Manager libraries and specify their versions
     implementation(libs.androidx.credentials)

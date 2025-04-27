@@ -50,11 +50,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.preference.PreferenceManager
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tango.composables.DeprecatedView
@@ -64,7 +67,10 @@ import com.example.tango.composables.ZipActivity
 import com.example.tango.composables.nativeLikeComposable
 import com.example.tango.ui.theme.TangoTheme
 import com.example.tango.utils.FirestoreUtils
+import com.example.tango.utils.GoogleSignInUtils
 import com.example.tango.viewmodels.BaseViewModel
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 
@@ -78,8 +84,33 @@ class MainActivity : ComponentActivity() {
         setContent {
             MainActivityView()
         }
-        askNotificationPermission()
         updateUserDetails()
+        checkSignInAndPermissions()
+    }
+
+    private fun checkSignInAndPermissions() {
+        if (Firebase.auth.currentUser == null && PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean("first_open", true)
+        ) {
+            PreferenceManager.getDefaultSharedPreferences(this).edit {
+                putBoolean("first_open", false)
+            }
+            GoogleSignInUtils(lifecycleScope, this, this) {
+                if (it != null) {
+                    val intent = Intent(
+                        this@MainActivity,
+                        MainActivity::class.java
+                    )
+                    intent.flags =
+                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                } else {
+                    askNotificationPermission()
+                }
+            }.signIn()
+        } else {
+            askNotificationPermission()
+        }
     }
 
 
