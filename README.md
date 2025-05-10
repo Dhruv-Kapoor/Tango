@@ -14,9 +14,6 @@ Fun puzzles inspired by LinkedIn Games. Solve and compete with friends.
 <a i="raw-url" href="https://github.com/Dhruv-Kapoor/Tango/raw/refs/heads/master/builds/Tango.apk">Download</a>
 
 ## Screenshots
-<img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/tango.jpg" width=300>
-<img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/queens.jpg" width=300>
-<img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/zip.jpg" width=300>
-<img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/calendar.jpg" width=300>
-<img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/leaderboard.jpg" width=300>
-<img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/settings.jpg" width=300>
+<img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/tango.jpg" width=300><img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/queens.jpg" width=300>
+<img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/zip.jpg" width=300><img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/calendar.jpg" width=300>
+<img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/leaderboard.jpg" width=300><img src="https://github.com/Dhruv-Kapoor/Tango/blob/master/screenshots/settings.jpg" width=300>
