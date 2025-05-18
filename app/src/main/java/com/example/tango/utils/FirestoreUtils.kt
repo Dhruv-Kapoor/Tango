@@ -226,6 +226,15 @@ object FirestoreUtils {
                     val data = arrayListOf<LeaderboardItem>()
                     snapshot?.documents?.forEach { participant ->
                         val userData = users[participant.data?.get("id")]
+                        val attempts = arrayListOf<Map<String, Any>>()
+                        (participant.data?.get("attempts") as List<Map<String, Any>>).forEach { attempt ->
+                            attempts.add(
+                                mapOf<String, Any>(
+                                    "attemptedOn" to (attempt["attemptedOn"] as Timestamp).toDate(),
+                                    "timeTaken" to (attempt["timeTaken"] as Long).toInt()
+                                )
+                            )
+                        }
                         data.add(
                             LeaderboardItem(
                                 timeTaken = ((participant.data?.get(orderingField)
@@ -235,7 +244,8 @@ object FirestoreUtils {
                                     name = userData?.get("name").toString(),
                                     profilePicUrl = userData?.get("profilePic").toString(),
                                     email = userData?.get("email").toString(),
-                                )
+                                ),
+                                attempts = attempts
                             )
                         )
                         onResult(data)

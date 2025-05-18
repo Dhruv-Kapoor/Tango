@@ -36,7 +36,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.preference.PreferenceManager
 import com.example.tango.composables.LeaderboardRow
 import com.example.tango.ui.theme.TangoTheme
 import com.example.tango.viewmodels.LeaderboardActivityViewModel
@@ -67,9 +67,15 @@ class LeaderboardActivity : ComponentActivity() {
     fun LeaderboardActivityView(
         viewModel: LeaderboardActivityViewModel = viewModel()
     ) {
-        if (!LocalInspectionMode.current) {
-            viewModel.loadData(intent?.getStringExtra("gridId") ?: "")
-        }
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val preferenceEditor = preferences.edit()
+        viewModel.setViewMode(
+            preferences.getInt(
+                "leaderboard_view_mode",
+                LeaderboardActivityViewModel.VIEWS.BEST_ATTEMPTS
+            )
+        )
+        viewModel.loadData(intent?.getStringExtra("gridId") ?: "")
 
         val leaderboardData by viewModel.leaderboardData.collectAsStateWithLifecycle()
         val loading by viewModel.loading.collectAsState()
@@ -121,6 +127,11 @@ class LeaderboardActivity : ComponentActivity() {
                                                 duration = SnackbarDuration.Short
                                             )
                                         }
+                                        preferenceEditor.putInt(
+                                            "leaderboard_view_mode",
+                                            LeaderboardActivityViewModel.VIEWS.FIRST_ATTEMPTS
+                                        )
+                                        preferenceEditor.apply()
                                     }
                                 )
                             }
@@ -137,6 +148,11 @@ class LeaderboardActivity : ComponentActivity() {
                                                 duration = SnackbarDuration.Short
                                             )
                                         }
+                                        preferenceEditor.putInt(
+                                            "leaderboard_view_mode",
+                                            LeaderboardActivityViewModel.VIEWS.BEST_ATTEMPTS
+                                        )
+                                        preferenceEditor.apply()
                                     }
                                 )
                             }

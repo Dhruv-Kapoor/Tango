@@ -2,6 +2,7 @@ package com.example.tango.composables
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,20 +11,28 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.example.tango.R
 import com.example.tango.dataClasses.LeaderboardItem
 import com.example.tango.dataClasses.User
 import com.example.tango.utils.Utils.conditional
+import com.example.tango.utils.Utils.formatDate
 import com.example.tango.utils.Utils.formatTime
+import java.util.Date
 import kotlin.random.Random
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -37,51 +46,86 @@ fun LeaderboardRow(
             email = "dhruv",
             id = ""
         ),
-        timeTaken = 70
+        timeTaken = 70,
+        attempts = emptyList()
     ),
     placement: Int = 5,
     currentUser: Boolean = false
 ) {
     val color: Pair<Color, Color> = getColorForPlacement(placement)
-    Row(
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .conditional(currentUser) {
-                border(2.dp, color = Color.Blue, shape = RoundedCornerShape(24.dp))
-            }
             .clip(shape = RoundedCornerShape(24.dp))
-            .background(color.first)
-            .padding(top = 14.dp, start = 14.dp, end = 24.dp, bottom = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .background(colorResource(R.color.white))
+            .padding()
     ) {
-        GlideImage(
+        Row(
             modifier = Modifier
-                .size(48.dp)
-                .clip(shape = RoundedCornerShape(24.dp)),
-            model = item.user.profilePicUrl,
-            contentDescription = "profile"
-        )
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .weight(1f)
+                .fillMaxWidth()
+                .conditional(currentUser) {
+                    border(2.dp, color = Color.Blue, shape = RoundedCornerShape(24.dp))
+                }
+                .clip(shape = RoundedCornerShape(24.dp))
+                .background(color.first)
+                .clickable(enabled = true) {
+                    expanded = !expanded
+                }
+                .padding(top = 14.dp, start = 14.dp, end = 24.dp, bottom = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(modifier = Modifier.padding(0.dp), text = item.user.name, fontSize = 16.sp)
+            GlideImage(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(shape = RoundedCornerShape(24.dp)),
+                model = item.user.profilePicUrl,
+                contentDescription = "profile"
+            )
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .weight(1f)
+            ) {
+                Text(modifier = Modifier.padding(0.dp), text = item.user.name, fontSize = 16.sp)
+                Text(
+                    modifier = Modifier.padding(0.dp),
+                    textAlign = TextAlign.Center,
+                    text = "took ${formatTime(item.timeTaken)}",
+                    fontSize = 12.sp
+                )
+            }
             Text(
-                modifier = Modifier.padding(0.dp),
-                textAlign = TextAlign.Center,
-                text = "took ${formatTime(item.timeTaken)}",
-                fontSize = 12.sp
+                text = placement.toString(),
+                color = Color.White,
+                modifier = Modifier
+                    .background(color.second, shape = RoundedCornerShape(16.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
-        Text(
-            text = placement.toString(),
-            color = Color.White,
-            modifier = Modifier
-                .background(color.second, shape = RoundedCornerShape(16.dp))
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-        )
+
+        if (expanded) {
+            Column(
+                modifier = Modifier.padding(
+                    top = 8.dp,
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp
+                )
+            ) {
+                Text("All Attempts", fontSize = 14.sp)
+                item.attempts.forEachIndexed { index, attempt ->
+                    val timeInSeconds = attempt["timeTaken"] as Int
+                    val time = "%d:%02d".format(timeInSeconds / 60, timeInSeconds % 60)
+                    Text(
+                        "${index + 1}. took $time on ${formatDate(attempt["attemptedOn"] as Date)}",
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
     }
+
 
 }
 

@@ -4,14 +4,13 @@ import com.example.tango.dataClasses.LeaderboardItem
 import com.example.tango.utils.FirestoreUtils
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class LeaderboardActivityViewModel : BaseViewModel() {
 
-    enum class VIEWS {
-        BEST_ATTEMPTS,
-        FIRST_ATTEMPTS
+    object VIEWS {
+        const val BEST_ATTEMPTS = 1
+        const val FIRST_ATTEMPTS = 2
     }
 
     private var _leaderboardData = MutableStateFlow<List<LeaderboardItem>>(listOf())
@@ -22,13 +21,17 @@ class LeaderboardActivityViewModel : BaseViewModel() {
 
     private var leaderboardDataListener: ListenerRegistration? = null
 
+    fun setViewMode(mode: Int) {
+        _currentViewType.value = mode
+    }
+
     fun switchToBestAttemptsView() {
-        _currentViewType.value = VIEWS.BEST_ATTEMPTS
+        setViewMode(VIEWS.BEST_ATTEMPTS)
         loadData()
     }
 
     fun switchToFirstAttemptsView() {
-        _currentViewType.value = VIEWS.FIRST_ATTEMPTS
+        setViewMode(VIEWS.FIRST_ATTEMPTS)
         loadData()
     }
 
