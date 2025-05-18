@@ -58,7 +58,7 @@ fun LeaderboardRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape = RoundedCornerShape(24.dp))
-            .background(colorResource(R.color.white))
+            .background(Color(0xFFE6F4F1))
             .padding()
     ) {
         Row(
