@@ -24,6 +24,7 @@ import java.time.ZoneId
 object FirestoreUtils {
 
     private const val TAG = "FirestoreUtils"
+    private val usersCache = mutableMapOf<String, User>()
 
     enum class COLLECTIONS(val value: String) {
         GRIDS("grids"), USERS("users"), PARTICIPANTS("participants"), CONFIG("config"),
@@ -201,6 +202,28 @@ object FirestoreUtils {
             }
     }
 
+    fun fetchUsersFromCache(userIds: List<String>, onResult: (Map<String, User>) -> Unit) {
+        val usersToFetch = (userIds.toSet() subtract usersCache.keys).toList()
+        if (usersToFetch.isNotEmpty()) {
+            fetchUsers(usersToFetch) {
+                it.entries.forEach { entry ->
+                    val userData = entry.value
+                    usersCache.put(
+                        entry.key, User(
+                            id = userData?.get("id").toString(),
+                            name = userData?.get("name").toString(),
+                            profilePicUrl = userData?.get("profilePic").toString(),
+                            email = userData?.get("email").toString(),
+                        )
+                    )
+                }
+                onResult(usersCache)
+            }
+        } else {
+            onResult(usersCache)
+        }
+    }
+
     fun getLeaderboardData(
         gridId: String,
         orderByBestTime: Boolean = true,
@@ -222,10 +245,9 @@ object FirestoreUtils {
                     onResult(emptyList())
                     return@addSnapshotListener
                 }
-                fetchUsers(userIds) { users ->
+                fetchUsersFromCache(userIds) { users ->
                     val data = arrayListOf<LeaderboardItem>()
                     snapshot?.documents?.forEach { participant ->
-                        val userData = users[participant.data?.get("id")]
                         val attempts = arrayListOf<Map<String, Any>>()
                         (participant.data?.get("attempts") as List<Map<String, Any>>).forEach { attempt ->
                             attempts.add(
@@ -239,12 +261,7 @@ object FirestoreUtils {
                             LeaderboardItem(
                                 timeTaken = ((participant.data?.get(orderingField)
                                     ?: 0) as Long).toInt(),
-                                user = User(
-                                    id = userData?.get("id").toString(),
-                                    name = userData?.get("name").toString(),
-                                    profilePicUrl = userData?.get("profilePic").toString(),
-                                    email = userData?.get("email").toString(),
-                                ),
+                                user = users[participant.data?.get("id")]!!,
                                 attempts = attempts
                             )
                         )

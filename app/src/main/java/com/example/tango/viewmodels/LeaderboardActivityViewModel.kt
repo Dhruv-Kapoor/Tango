@@ -49,4 +49,8 @@ class LeaderboardActivityViewModel : BaseViewModel() {
         }
     }
 
+    fun removeListener() {
+        leaderboardDataListener?.remove()
+    }
+
 }

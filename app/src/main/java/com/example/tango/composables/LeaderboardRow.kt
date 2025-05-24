@@ -11,22 +11,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.example.tango.R
 import com.example.tango.dataClasses.LeaderboardItem
 import com.example.tango.dataClasses.User
 import com.example.tango.utils.Utils.conditional
@@ -34,7 +28,6 @@ import com.example.tango.utils.Utils.formatDate
 import com.example.tango.utils.Utils.formatTime
 import java.util.Date
 import kotlin.math.abs
-import kotlin.random.Random
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Preview(showBackground = true)
@@ -54,7 +47,6 @@ fun LeaderboardRow(
     currentUser: Boolean = false
 ) {
     val color: Pair<Color, Color> = getColorForPlacement(placement, item)
-    var expanded by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -71,7 +63,7 @@ fun LeaderboardRow(
                 .clip(shape = RoundedCornerShape(24.dp))
                 .background(color.first)
                 .clickable(enabled = true) {
-                    expanded = !expanded
+                    item.expanded = !item.expanded
                 }
                 .padding(top = 14.dp, start = 14.dp, end = 24.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -105,7 +97,7 @@ fun LeaderboardRow(
             )
         }
 
-        if (expanded) {
+        if (item.expanded) {
             Column(
                 modifier = Modifier.padding(
                     top = 8.dp,

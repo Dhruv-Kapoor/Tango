@@ -53,6 +53,7 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 
 class LeaderboardActivity : ComponentActivity() {
+    private lateinit var viewModel: LeaderboardActivityViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -64,9 +65,8 @@ class LeaderboardActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Preview(showSystemUi = true)
     @Composable
-    fun LeaderboardActivityView(
-        viewModel: LeaderboardActivityViewModel = viewModel()
-    ) {
+    fun LeaderboardActivityView() {
+        viewModel = viewModel()
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val preferenceEditor = preferences.edit()
         viewModel.setViewMode(
@@ -200,5 +200,10 @@ class LeaderboardActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        viewModel.removeListener()
+        super.onDestroy()
     }
 }
