@@ -33,6 +33,7 @@ import com.example.tango.utils.Utils.conditional
 import com.example.tango.utils.Utils.formatDate
 import com.example.tango.utils.Utils.formatTime
 import java.util.Date
+import kotlin.math.abs
 import kotlin.random.Random
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -52,7 +53,7 @@ fun LeaderboardRow(
     placement: Int = 5,
     currentUser: Boolean = false
 ) {
-    val color: Pair<Color, Color> = getColorForPlacement(placement)
+    val color: Pair<Color, Color> = getColorForPlacement(placement, item)
     var expanded by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier = Modifier
@@ -129,7 +130,7 @@ fun LeaderboardRow(
 
 }
 
-fun getColorForPlacement(i: Int): Pair<Color, Color> {
+fun getColorForPlacement(i: Int, item: LeaderboardItem): Pair<Color, Color> {
     if (i == 1) {
         return Pair(Color(0xFFFFD700), Color(0xFFFFA407))
     } else if (i == 2) {
@@ -149,5 +150,5 @@ fun getColorForPlacement(i: Int): Pair<Color, Color> {
         Pair(Color(0xFFF9F7E8), Color(0xFFD6E6A9)),
         Pair(Color(0xFFF3F3F3), Color(0xFFC4C4C4))
     )
-    return colorPallet[Random.nextInt(colorPallet.size)]
+    return colorPallet[abs(item.hashCode()) % colorPallet.size]
 }
