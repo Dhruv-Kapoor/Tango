@@ -66,6 +66,7 @@ import nl.dionsegijn.konfetti.core.Position
 import nl.dionsegijn.konfetti.core.Spread
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 @Preview
 @Composable
@@ -90,6 +91,7 @@ fun QueensActivityView(
 
     val preferencesFlow = PreferenceManager.getDefaultSharedPreferences(context).getPreferenceFlow()
     val preferences = preferencesFlow.collectAsState()
+    val config by viewModel.config.collectAsState()
 
     var openCalendarDialog by remember { mutableStateOf(false) }
 
@@ -176,8 +178,9 @@ fun QueensActivityView(
                             Button(modifier = Modifier.weight(1f), onClick = {
                                 scope.launch {
                                     snackbarHostState?.currentSnackbarData?.dismiss()
+                                    val messages = config?.get("hints") as List<String>
                                     snackbarHostState?.showSnackbar(
-                                        "bola na nhi banega",
+                                        messages[Random.nextInt(messages.size)],
                                         duration = SnackbarDuration.Short
                                     )
                                 }
