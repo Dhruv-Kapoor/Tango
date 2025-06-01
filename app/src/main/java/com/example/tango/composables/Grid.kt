@@ -41,6 +41,7 @@ fun <T> Grid(
     modifier: Modifier = Modifier,
     cellSize: Dp = CELL_SIZE,
     enableDragging: Boolean = false,
+    drawBorders: Boolean = true,
     onDragStart: ((Pair<Int, Int>) -> Unit)? = null,
     onDrag: ((Pair<Int, Int>) -> Unit)? = null,
     onDragEnd: (() -> Unit)? = null,
@@ -63,12 +64,14 @@ fun <T> Grid(
     Box(Modifier, contentAlignment = Alignment.Center) {
         Column(
             modifier = modifier
-                .border(
-                    width = 0.5.dp,
-                    color = edgeColor,
-                    shape = RoundedCornerShape(4.dp)
-                )
-                .clip(RoundedCornerShape(4.dp))
+                .conditional(drawBorders) {
+                    border(
+                        width = 0.5.dp,
+                        color = edgeColor,
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                    clip(RoundedCornerShape(4.dp))
+                }
                 .conditional(enableDragging) {
                     pointerInput(Unit) {
                         detectDragGestures(
