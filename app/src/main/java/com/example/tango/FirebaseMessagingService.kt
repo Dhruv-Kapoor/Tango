@@ -16,7 +16,6 @@ class CustomFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        println("onMessageReceived ${message.data}")
         if (message.data["type"] == "invite") {
             val intent = Intent("INVITE_RECEIVED")
             intent.putExtra("message", message.notification?.title)

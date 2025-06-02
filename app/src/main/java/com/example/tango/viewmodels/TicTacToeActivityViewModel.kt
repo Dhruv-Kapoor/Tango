@@ -24,6 +24,9 @@ class TicTacToeActivityViewModel : ViewModel() {
     private val _loading = MutableStateFlow(true)
     val loading = _loading.asStateFlow()
 
+    private val _loggedIn = MutableStateFlow(false)
+    val loggedIn = _loggedIn.asStateFlow()
+
     private var roomId: String? = null
     private var prevRoomId: String? = null
 
@@ -40,17 +43,27 @@ class TicTacToeActivityViewModel : ViewModel() {
     val snackbarMessage = _snackbarMessage.asSharedFlow()
 
     init {
-//        TODO check not logged in cases
-        _player.value = User.fromFirebaseUser(Firebase.auth.currentUser!!)
-        FirestoreUtils.getCurrentRoomId(FirestoreUtils.GAME_TYPES.TIC_TAC_TOE) {
-            if (it != null) {
-                roomId = it
-                addRoomListener()
-            } else {
-                roomId = null
-                _gameRoom.value = null
-                _opponent.value = null
+        initialize()
+    }
+
+    fun initialize() {
+        val firebaseUser = Firebase.auth.currentUser
+        if (firebaseUser != null) {
+            _player.value = User.fromFirebaseUser(Firebase.auth.currentUser!!)
+            FirestoreUtils.getCurrentRoomId(FirestoreUtils.GAME_TYPES.TIC_TAC_TOE) {
+                if (it != null) {
+                    roomId = it
+                    addRoomListener()
+                } else {
+                    roomId = null
+                    _gameRoom.value = null
+                    _opponent.value = null
+                }
+                _loading.value = false
             }
+            _loggedIn.value = true
+        } else {
+            _loading.value = false
         }
     }
 
@@ -62,7 +75,7 @@ class TicTacToeActivityViewModel : ViewModel() {
             if (it?.player1 == Firebase.auth.uid) {
                 if (it?.player2 != _opponent.value?.id) {
                     if (it?.player2 != null) {
-                        FirestoreUtils.fetchUsersFromCache(listOf(it.player2)) { users ->
+                        FirestoreUtils.fetchUsersFromCache(listOf(it.player2!!)) { users ->
                             _opponent.value = users[it.player2]
                         }
                     } else {
@@ -72,7 +85,7 @@ class TicTacToeActivityViewModel : ViewModel() {
             } else {
                 if (it?.player1 != _opponent.value?.id) {
                     if (it?.player1 != null) {
-                        FirestoreUtils.fetchUsersFromCache(listOf(it.player1)) { users ->
+                        FirestoreUtils.fetchUsersFromCache(listOf(it.player1!!)) { users ->
                             _opponent.value = users[it.player1]
                         }
                     } else {
@@ -102,7 +115,7 @@ class TicTacToeActivityViewModel : ViewModel() {
         )
     }
 
-    fun onCellUpdated(cell: TicTacToeCellData) {
+    fun onCellUpdated(cell: TicTacToeCellData, i: Int, j: Int) {
         val room = _gameRoom.value
         if (room == null) {
             return
@@ -114,12 +127,27 @@ class TicTacToeActivityViewModel : ViewModel() {
         }
         room.turn = _opponent.value?.id
         val winner = validateTicTacToe(room.getParsedGrid<TicTacToeCellData>())
-        if (winner == TicTacToeCellValue.CROSS) {
-            room.winner = room.firstTurnUserID
+        if (winner != null) {
+            if (winner == TicTacToeCellValue.CROSS) {
+                room.winner = room.firstTurnUserID
+            } else if (winner == TicTacToeCellValue.CIRCLE) {
+                room.winner =
+                    if (room.firstTurnUserID == room.player1) room.player2 else room.player1
+            }
             room.status = ROOM_STATUS.COMPLETED
-        } else if (winner == TicTacToeCellValue.CIRCLE) {
-            room.winner = if (room.firstTurnUserID == room.player1) room.player2 else room.player1
-            room.status = ROOM_STATUS.COMPLETED
+        }
+        var queue = room.queue
+        queue.add(i * 3 + j)
+        if (queue.size > 7) {
+            val pos = queue.removeAt(0)
+            val cell = room.getParsedGrid<TicTacToeCellData>()[pos / 3][pos % 3]
+            cell.partial = false
+            cell.value = TicTacToeCellValue.BLANK
+        }
+        if (queue.size == 7) {
+            val pos = queue[0]
+            val cell = room.getParsedGrid<TicTacToeCellData>()[pos / 3][pos % 3]
+            cell.partial = true
         }
         _gameRoom.value = room
         FirestoreUtils.updateRoomState(FirestoreUtils.GAME_TYPES.TIC_TAC_TOE, room)
@@ -164,8 +192,11 @@ class TicTacToeActivityViewModel : ViewModel() {
             room.firstTurnUserID = room.player2
         }
         room.turn = room.firstTurnUserID
+        room.winner = null
+        room.queue = mutableListOf()
         room.parsedGridCache =
             GameRoom.getDefaultGrid<TicTacToeCellData>(Pair(3, 3)) as Array<Array<Any>>?
+        _gameRoom.value = room
         FirestoreUtils.updateRoomState(FirestoreUtils.GAME_TYPES.TIC_TAC_TOE, room)
     }
 }

@@ -7,7 +7,8 @@ data class User(
     val name: String,
     val profilePicUrl: String,
     val email: String,
-    val fcmToken: String? = null
+    val fcmToken: String? = null,
+    val currentAppVersion: String? = null
 ) {
     companion object {
         fun fromFirebaseUser(user: FirebaseUser): User {

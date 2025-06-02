@@ -16,15 +16,16 @@ object ROOM_STATUS {
 
 @IgnoreExtraProperties
 data class GameRoom (
-    val id: String = "",
-    val number: String = "",
-    val player1: String? = null,
-    val player2: String? = null,
+    var id: String = "",
+    var number: String = "",
+    var player1: String? = null,
+    var player2: String? = null,
     var status: Int = ROOM_STATUS.CREATED,
     var turn: String? = null,
     var grid: String? = null,
     var firstTurnUserID: String? = null,
     var winner: String? = null,
+    var queue: MutableList<Int> = mutableListOf(),
 ) {
     @Exclude
     @set:Exclude

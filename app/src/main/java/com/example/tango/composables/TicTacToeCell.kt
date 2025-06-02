@@ -35,6 +35,8 @@ fun TicTacToeCell(
     val cellSizeInDp = cellSize.pxToDp()
 
     val edgeColor = colorResource(R.color.border_color)
+    val redColor = if (cellData.partial) Color(0xFFf5b7b1) else Color(0xFFe74c3c)
+    val blueColor = if (cellData.partial) Color(0xFFaed6f1) else Color(0xFF3498db)
 
     Box(
         contentAlignment = Alignment.Center, modifier = Modifier
@@ -71,14 +73,14 @@ fun TicTacToeCell(
                 Icon(
                     painter = painterResource(id = R.drawable.cross), contentDescription = "",
                     modifier = Modifier.size((cellSize.toFloat() / 1.5f).toInt().pxToDp()),
-                    tint = if (invertColors) Color.Red else Color.Blue
+                    tint = if (invertColors) redColor else blueColor
                 )
             }
             TicTacToeCellValue.CIRCLE -> {
                 Icon(
                     painter = painterResource(id = R.drawable.circle), contentDescription = "",
                     modifier = Modifier.size(cellSizeInDp / 2),
-                    tint = if (invertColors) Color.Blue else Color.Red
+                    tint = if (invertColors) blueColor else redColor
                 )
             }
         }

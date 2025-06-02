@@ -1,8 +1,11 @@
 package com.example.tango.composables
 
+import android.widget.Toast
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -95,9 +99,11 @@ fun InviteUsersModal(
 ) {
     val loading by viewModel.loading.collectAsState()
     val users by viewModel.users.collectAsState()
-//    val invitedUsers by viewModel.invitedUsers.collectAsState()
 
     val invitedUsers = remember { hashSetOf<String>() }
+
+    val context = LocalContext.current
+
     Dialog(
         onDismissRequest = { onDismissRequest() },
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -110,7 +116,9 @@ fun InviteUsersModal(
             )
         ) {
             if (loading) {
-                CircularProgressIndicator()
+                Box(modifier = Modifier.fillMaxWidth().height(400.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             } else {
                 LazyColumn(
                     modifier = Modifier
@@ -118,9 +126,16 @@ fun InviteUsersModal(
                 ) {
                     items(users) {
                         UserRow(it, invited = it.id in invitedUsers, onInvite = {
-//                            viewModel.inviteUser(it)
-                            onInvite(it)
-                            invitedUsers.add(it.id)
+                            if((it.currentAppVersion ?: "") >= "2.0.0") {
+                                onInvite(it)
+                                invitedUsers.add(it.id)
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Unable to invite. ${it.name} does not have latest version of app.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         })
                     }
                 }

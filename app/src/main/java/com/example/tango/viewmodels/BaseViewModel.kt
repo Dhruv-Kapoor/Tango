@@ -149,7 +149,6 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
     fun showInvite(invite: Invite) {
         _inviteData.value = invite
         _showInvite.value = true
-        println("showInvite")
     }
 
     fun declineInvite() {

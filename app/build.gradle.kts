@@ -17,8 +17,8 @@ android {
         applicationId = "com.example.tango"
         minSdk = 26
         targetSdk = 35
-        versionCode = 26
-        versionName = "1.4.7"
+        versionCode = 27
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -42,7 +42,6 @@ android {
     buildTypes {
         debug {
             resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "true")
-//            applicationIdSuffix = ".debug"
         }
         release {
             isMinifyEnabled = true

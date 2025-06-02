@@ -411,7 +411,8 @@ object FirestoreUtils {
                                 name = userData?.get("name").toString(),
                                 profilePicUrl = userData?.get("profilePic").toString(),
                                 email = userData?.get("email").toString(),
-                                fcmToken = userData?.get("fcmToken").toString()
+                                fcmToken = userData?.get("fcmToken").toString(),
+                                currentAppVersion = userData?.get("currentAppVersion") as String?
                             )
                         )
                     }
