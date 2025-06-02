@@ -42,6 +42,7 @@ android {
     buildTypes {
         debug {
             resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "true")
+//            applicationIdSuffix = ".debug"
         }
         release {
             isMinifyEnabled = true

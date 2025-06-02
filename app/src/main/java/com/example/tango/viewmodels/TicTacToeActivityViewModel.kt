@@ -21,6 +21,8 @@ import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 class TicTacToeActivityViewModel : ViewModel() {
+    private var config: Map<String, Any>? = null
+
     private val _loading = MutableStateFlow(true)
     val loading = _loading.asStateFlow()
 
@@ -43,6 +45,9 @@ class TicTacToeActivityViewModel : ViewModel() {
     val snackbarMessage = _snackbarMessage.asSharedFlow()
 
     init {
+        FirestoreUtils.getLatestConfig { config ->
+            this.config = config
+        }
         initialize()
     }
 
@@ -136,18 +141,21 @@ class TicTacToeActivityViewModel : ViewModel() {
             }
             room.status = ROOM_STATUS.COMPLETED
         }
-        var queue = room.queue
-        queue.add(i * 3 + j)
-        if (queue.size > 7) {
-            val pos = queue.removeAt(0)
-            val cell = room.getParsedGrid<TicTacToeCellData>()[pos / 3][pos % 3]
-            cell.partial = false
-            cell.value = TicTacToeCellValue.BLANK
-        }
-        if (queue.size == 7) {
-            val pos = queue[0]
-            val cell = room.getParsedGrid<TicTacToeCellData>()[pos / 3][pos % 3]
-            cell.partial = true
+        if (config?.get("tictactoeQueueSize") != null) {
+            val queueSize = (config!!["tictactoeQueueSize"] as Long).toInt()
+            var queue = room.queue
+            queue.add(i * 3 + j)
+            if (queue.size > queueSize) {
+                val pos = queue.removeAt(0)
+                val cell = room.getParsedGrid<TicTacToeCellData>()[pos / 3][pos % 3]
+                cell.partial = false
+                cell.value = TicTacToeCellValue.BLANK
+            }
+            if (queue.size == queueSize) {
+                val pos = queue[0]
+                val cell = room.getParsedGrid<TicTacToeCellData>()[pos / 3][pos % 3]
+                cell.partial = true
+            }
         }
         _gameRoom.value = room
         FirestoreUtils.updateRoomState(FirestoreUtils.GAME_TYPES.TIC_TAC_TOE, room)
