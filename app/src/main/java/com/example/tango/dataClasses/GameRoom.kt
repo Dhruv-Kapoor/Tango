@@ -53,7 +53,7 @@ data class GameRoom (
             return randomId.toString()
         }
         @Exclude
-        inline fun <reified T> getDefaultGrid(size: Pair<Int, Int>): Array<Array<T>> {
+        inline fun <reified T> getDefaultGrid(size: Pair<Int, Int> = Pair(3,3)): Array<Array<T>> {
             return Array(size.first) {
                 Array(size.second) { T::class.java.getDeclaredConstructor().newInstance() }
             }
