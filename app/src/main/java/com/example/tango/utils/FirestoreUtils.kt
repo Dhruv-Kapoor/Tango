@@ -3,15 +3,25 @@ package com.example.tango.utils
 import android.util.Log
 import com.example.tango.BuildConfig
 import com.example.tango.GRID_TYPES
+import com.example.tango.dataClasses.GameRoom
 import com.example.tango.dataClasses.Grid
+import com.example.tango.dataClasses.INVITE_STATUS
+import com.example.tango.dataClasses.Invite
 import com.example.tango.dataClasses.LeaderboardItem
 import com.example.tango.dataClasses.QueensCellData
+import com.example.tango.dataClasses.ROOM_STATUS
 import com.example.tango.dataClasses.TangoCellData
+import com.example.tango.dataClasses.TicTacToeCellData
 import com.example.tango.dataClasses.User
 import com.example.tango.dataClasses.ZipCellData
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -27,12 +37,25 @@ object FirestoreUtils {
     private val usersCache = mutableMapOf<String, User>()
 
     enum class COLLECTIONS(val value: String) {
-        GRIDS("grids"), USERS("users"), PARTICIPANTS("participants"), CONFIG("config"),
-        ANONYMOUS_USERS("anonymousUsers")
+        GRIDS("grids"),
+        USERS("users"),
+        PARTICIPANTS("participants"),
+        CONFIG("config"),
+        ANONYMOUS_USERS("anonymousUsers"),
+        INVITES("invites")
     }
+
+    enum class GAME_TYPES(val value: String) {
+        TIC_TAC_TOE("tictactoe")
+    }
+
 
     private fun getDb(): FirebaseFirestore {
         return Firebase.firestore
+    }
+
+    private fun getRealtimeDb(): FirebaseDatabase {
+        return Firebase.database
     }
 
     fun parseTangoGridStr(gridStr: String): Array<Array<TangoCellData>> {
@@ -372,6 +395,147 @@ object FirestoreUtils {
                 ),
                 SetOptions.merge()
             )
+        }
+    }
+
+    fun fetchAllUsers(onResult: (List<User>) -> Unit) {
+        val users = mutableListOf<User>()
+        getDb().collection(COLLECTIONS.USERS.value).get()
+            .addOnSuccessListener {
+                it.documents.forEach { doc ->
+                    if (doc.id != Firebase.auth.uid) {
+                        val userData = doc.data
+                        users.add(
+                            User(
+                                id = doc.id,
+                                name = userData?.get("name").toString(),
+                                profilePicUrl = userData?.get("profilePic").toString(),
+                                email = userData?.get("email").toString(),
+                                fcmToken = userData?.get("fcmToken").toString(),
+                                currentAppVersion = userData?.get("currentAppVersion") as String?
+                            )
+                        )
+                    }
+                }
+                users.sortWith(compareBy { it.name.lowercase() })
+                onResult(users)
+            }
+    }
+
+    fun createGameRoom(gameType: GAME_TYPES): GameRoom {
+        val gameRef = getRealtimeDb().getReference(gameType.value)
+        val roomRef = gameRef.child("rooms").push()
+
+        val room = GameRoom(
+            player1 = Firebase.auth.uid,
+            number = GameRoom.generateRoomId(),
+            id = roomRef.key!!
+        )
+        roomRef.setValue(room)
+        gameRef.child("users").child(room.player1!!).setValue(roomRef.key)
+        return room
+    }
+
+    fun getCurrentRoomId(gameType: GAME_TYPES, onResult: (String?) -> Unit) {
+        if (Firebase.auth.uid == null) {
+            return onResult(null)
+        }
+        val gameRef = getRealtimeDb().getReference(gameType.value)
+        gameRef.child("users").child(Firebase.auth.uid!!)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    onResult(snapshot.value as String?)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onResult(null)
+                }
+            })
+    }
+
+    fun <T> getCurrentRoomData(
+        gameType: GAME_TYPES,
+        roomId: String,
+        onResult: (GameRoom?) -> Unit
+    ): ValueEventListener {
+        val gameRef = getRealtimeDb().getReference(gameType.value)
+        return gameRef.child("rooms").child(roomId)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    onResult(snapshot.getValue(GameRoom::class.java))
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onResult(null)
+                }
+
+            })
+    }
+
+    fun inviteUserToGame(inviteType: Int, user: User, route: String, roomNumber: String) {
+        val ref = getDb().collection(COLLECTIONS.INVITES.value).document()
+        val now = Timestamp.now()
+        val invite = Invite(
+            id = ref.id,
+            invitedBy = Firebase.auth.uid!!,
+            invitedByName = Firebase.auth.currentUser?.displayName ?: "",
+            invitedTo = user.id,
+            invitedToFcmToken = user.fcmToken ?: "",
+            invitedOn = Timestamp.now(),
+            inviteType = inviteType,
+            status = INVITE_STATUS.INVITED,
+            route = route,
+            roomNumber = roomNumber,
+            expiresAt = Timestamp(now.seconds + 1800, now.nanoseconds)
+        )
+        ref.set(invite)
+    }
+
+    fun updateRoomState(gameType: GAME_TYPES, room: GameRoom) {
+        room.grid = convertGridToStr(room.getParsedGrid<TicTacToeCellData>() as Array<Array<Any>>)
+        getRealtimeDb().getReference(gameType.value).child("rooms").child(room.id)
+            .setValue(room)
+    }
+
+    fun updateInvite(invite: Invite) {
+        getDb().collection(COLLECTIONS.INVITES.value).document(invite.id).set(invite)
+    }
+
+    fun exitRoom(gameType: GAME_TYPES, gameRoom: GameRoom) {
+        val usersRef = getRealtimeDb().getReference(gameType.value).child("users")
+        gameRoom.player1?.let { usersRef.child(it).removeValue() }
+        gameRoom.player2?.let { usersRef.child(it).removeValue() }
+    }
+
+    fun getValidInvite(inviteId: String, onResult: (Invite?) -> Unit) {
+        getDb().collection(COLLECTIONS.INVITES.value).document(inviteId).get()
+            .addOnSuccessListener {
+                val invite = it.toObject(Invite::class.java)
+                if (invite != null && (invite.expiresAt?.seconds
+                        ?: 0) > Timestamp.now().seconds && invite.status == INVITE_STATUS.INVITED
+                ) {
+                    onResult(invite)
+                } else {
+                    onResult(null)
+                }
+            }
+    }
+
+    fun joinRoom(gameType: GAME_TYPES, roomId: String) {
+        val userId = Firebase.auth.uid!!
+        getRealtimeDb().getReference(gameType.value).child("users").child(userId).setValue(roomId)
+        getRealtimeDb().getReference(gameType.value).child("rooms").child(roomId).child("player2")
+            .setValue(userId)
+        getRealtimeDb().getReference(gameType.value).child("rooms").child(roomId).child("status")
+            .setValue(
+                ROOM_STATUS.READY
+            )
+    }
+
+    fun getRoomStatus(gameType: GAME_TYPES, roomId: String, onResult: (Int?) -> Unit) {
+        getRealtimeDb().getReference(gameType.value).child("rooms").child(roomId).child("status")
+            .get().addOnSuccessListener {
+            onResult(it.getValue(Int::class.java))
         }
     }
 }

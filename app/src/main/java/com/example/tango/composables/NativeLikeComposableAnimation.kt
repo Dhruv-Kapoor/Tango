@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -58,6 +59,7 @@ fun AnimatedContentTransitionScope<*>.defaultPopExitTransition(): ExitTransition
 
 fun NavGraphBuilder.nativeLikeComposable(
     route: String,
+    arguments: List<NamedNavArgument> = emptyList(),
     content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit
 ) {
     composable(
@@ -66,6 +68,7 @@ fun NavGraphBuilder.nativeLikeComposable(
         exitTransition = { defaultExitTransition() },
         popEnterTransition = { defaultPopEnterTransition() },
         popExitTransition = { defaultPopExitTransition() },
-        content = content
+        content = content,
+        arguments = arguments
     )
 }

@@ -1,6 +1,9 @@
 package com.example.tango
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -9,19 +12,33 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
@@ -41,8 +58,10 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontFamily
@@ -54,15 +73,18 @@ import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.preference.PreferenceManager
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.tango.composables.DeprecatedView
 import com.example.tango.composables.QueensActivity
 import com.example.tango.composables.TangoActivity
+import com.example.tango.composables.TicTacToeActivityView
 import com.example.tango.composables.ZipActivity
 import com.example.tango.composables.nativeLikeComposable
 import com.example.tango.ui.theme.TangoTheme
@@ -74,9 +96,11 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 
+
 const val TAG = "MainActivity"
 
 class MainActivity : ComponentActivity() {
+    private var inviteReceiver: BroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,11 +122,9 @@ class MainActivity : ComponentActivity() {
             GoogleSignInUtils(lifecycleScope, this, this) {
                 if (it != null) {
                     val intent = Intent(
-                        this@MainActivity,
-                        MainActivity::class.java
+                        this@MainActivity, MainActivity::class.java
                     )
-                    intent.flags =
-                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                 } else {
                     askNotificationPermission()
@@ -123,6 +145,8 @@ class MainActivity : ComponentActivity() {
         val currentUser by viewModel.currentUser.collectAsState()
         val config by viewModel.config.collectAsState()
         val updateAvailable by viewModel.updateAvailable.collectAsState()
+        val inviteData by viewModel.inviteData.collectAsState()
+        val showInvite by viewModel.showInvite.collectAsState()
         val uriHandler = LocalUriHandler.current
         val context = LocalContext.current
 
@@ -130,7 +154,13 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         val scope = rememberCoroutineScope()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentScreen by remember { derivedStateOf { navBackStackEntry?.destination?.route } }
+        val currentScreen by remember {
+            derivedStateOf {
+                navBackStackEntry?.destination?.route?.split(
+                    "?"
+                )[0]
+            }
+        }
 
         TangoTheme {
             if (isDeprecated) {
@@ -147,98 +177,133 @@ class MainActivity : ComponentActivity() {
                         ModalDrawerSheet(
                             modifier = Modifier.fillMaxWidth(0.75f),
                         ) {
-                            Spacer(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(240.dp)
-                            )
-                            NavigationDrawerItem(
-                                label = { Text(text = Routes.Tango.label) },
-                                selected = currentScreen == Routes.Tango.route,
-                                shape = RoundedCornerShape(8.dp),
-                                onClick = {
-                                    navController.navigate(Routes.Tango.route) {
-                                        launchSingleTop = true
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        Text(
+                                            "Solo",
+                                            fontSize = 12.sp,
+                                            color = Color.Gray,
+                                            modifier = Modifier.padding(horizontal = 8.dp)
+                                        )
+                                        HorizontalDivider()
+                                        NavigationDrawerItem(
+                                            label = { Text(text = Routes.Tango.label) },
+                                            selected = currentScreen == Routes.Tango.route,
+                                            shape = RoundedCornerShape(8.dp),
+                                            onClick = {
+                                                navController.navigate(Routes.Tango.route) {
+                                                    launchSingleTop = true
+                                                }
+                                                scope.launch {
+                                                    drawerState.close()
+                                                }
+                                            })
+                                        NavigationDrawerItem(
+                                            label = { Text(text = Routes.Queens.label) },
+                                            selected = currentScreen == Routes.Queens.route,
+                                            shape = RoundedCornerShape(8.dp),
+                                            onClick = {
+                                                navController.navigate(Routes.Queens.route) {
+                                                    launchSingleTop = true
+                                                }
+                                                scope.launch {
+                                                    drawerState.close()
+                                                }
+                                            })
+                                        NavigationDrawerItem(
+                                            label = { Text(text = Routes.Zip.label) },
+                                            selected = currentScreen == Routes.Zip.route,
+                                            shape = RoundedCornerShape(8.dp),
+                                            onClick = {
+                                                navController.navigate(Routes.Zip.route) {
+                                                    launchSingleTop = true
+                                                }
+                                                scope.launch {
+                                                    drawerState.close()
+                                                }
+                                            })
+
+                                        Spacer(Modifier.size(32.dp))
+                                        Text(
+                                            "Multiplayer",
+                                            fontSize = 12.sp,
+                                            color = Color.Gray,
+                                            modifier = Modifier.padding(horizontal = 8.dp)
+                                        )
+                                        HorizontalDivider()
+
+                                        NavigationDrawerItem(
+                                            label = { Text(text = Routes.TicTacToe.label) },
+                                            selected = currentScreen == Routes.TicTacToe.route,
+                                            shape = RoundedCornerShape(8.dp),
+                                            onClick = {
+                                                navController.navigate(Routes.TicTacToe.route) {
+                                                    launchSingleTop = true
+                                                }
+                                                scope.launch {
+                                                    drawerState.close()
+                                                }
+                                            })
                                     }
-                                    scope.launch {
-                                        drawerState.close()
-                                    }
-                                })
-                            NavigationDrawerItem(
-                                label = { Text(text = Routes.Queens.label) },
-                                selected = currentScreen == Routes.Queens.route,
-                                shape = RoundedCornerShape(8.dp),
-                                onClick = {
-                                    navController.navigate(Routes.Queens.route) {
-                                        launchSingleTop = true
-                                    }
-                                    scope.launch {
-                                        drawerState.close()
-                                    }
-                                })
-                            NavigationDrawerItem(
-                                label = { Text(text = Routes.Zip.label) },
-                                selected = currentScreen == Routes.Zip.route,
-                                shape = RoundedCornerShape(8.dp),
-                                onClick = {
-                                    navController.navigate(Routes.Zip.route) {
-                                        launchSingleTop = true
-                                    }
-                                    scope.launch {
-                                        drawerState.close()
-                                    }
-                                })
+                                }
+//                                HorizontalDivider()
+//                                Text("Login")
+                            }
                         }
                     }) {
                     Scaffold(
                         topBar = {
-                            CenterAlignedTopAppBar(navigationIcon = {
-                                IconButton(onClick = {
-                                    scope.launch {
-                                        drawerState.open()
-                                    }
+                        CenterAlignedTopAppBar(navigationIcon = {
+                            IconButton(onClick = {
+                                scope.launch {
+                                    drawerState.open()
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Menu, contentDescription = "Menu"
+                                )
+                            }
+                        }, title = {
+                            Text(
+                                text = Routes.getRoute(currentScreen ?: "").label,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Cursive,
+                                fontSize = 32.sp
+                            )
+                        }, actions = {
+                            IconButton(
+                                modifier = Modifier.padding(horizontal = 8.dp), onClick = {
+                                    context.startActivity(
+                                        Intent(
+                                            context, SettingsActivity::class.java
+                                        )
+                                    )
                                 }) {
+                                if (currentUser?.profilePicUrl != null) {
+                                    GlideImage(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(shape = RoundedCornerShape(18.dp)),
+                                        model = currentUser?.profilePicUrl,
+                                        contentDescription = null
+                                    )
+                                } else {
                                     Icon(
-                                        imageVector = Icons.Filled.Menu, contentDescription = "Menu"
+                                        imageVector = Icons.Filled.Settings,
+                                        contentDescription = "Settings"
                                     )
                                 }
-                            }, title = {
-                                Text(
-                                    text = Routes.getRoute(currentScreen ?: "").label,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Cursive,
-                                    fontSize = 32.sp
-                                )
-                            }, actions = {
-                                IconButton(
-                                    modifier = Modifier.padding(horizontal = 8.dp),
-                                    onClick = {
-                                        context.startActivity(
-                                            Intent(
-                                                context, SettingsActivity::class.java
-                                            )
-                                        )
-                                    }) {
-                                    if (currentUser?.profilePicUrl != null) {
-                                        GlideImage(
-                                            modifier = Modifier
-                                                .size(36.dp)
-                                                .clip(shape = RoundedCornerShape(18.dp)),
-                                            model = currentUser?.profilePicUrl,
-                                            contentDescription = null
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Filled.Settings,
-                                            contentDescription = "Settings"
-                                        )
-                                    }
-                                }
-                            })
-                        },
+                            }
+                        })
+                    },
                         modifier = Modifier.fillMaxSize(),
                         snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
-
                         NavHost(
                             navController = navController,
                             startDestination = intent?.getStringExtra("route")
@@ -253,6 +318,69 @@ class MainActivity : ComponentActivity() {
                             }
                             nativeLikeComposable(route = Routes.Zip.route) {
                                 ZipActivity(snackbarHostState = snackbarHostState)
+                            }
+                            nativeLikeComposable(
+                                route = Routes.TicTacToe.route + Routes.TicTacToe.params,
+                                arguments = listOf(
+                                    navArgument("roomId") {
+                                        defaultValue = null
+                                        nullable = true
+                                    })
+                            ) { backStackEntry ->
+                                TicTacToeActivityView(
+                                    snackbarHostState = snackbarHostState,
+                                    navController = navController
+                                )
+                            }
+                        }
+
+
+                    }
+                }
+                AnimatedVisibility(
+                    visible = showInvite, enter = slideInVertically(),// + expandVertically(),
+                    exit = slideOutVertically() //+ shrinkVertically()
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .windowInsetsPadding(
+                                WindowInsets.systemBars.only(
+                                    WindowInsetsSides.Vertical
+                                )
+                            )
+                            .padding(horizontal = 8.dp, vertical = 12.dp),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 4.dp
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text("New Invite!")
+                            HorizontalDivider()
+                            Spacer(modifier = Modifier.size(16.dp))
+                            Text(
+                                inviteData?.message ?: "",
+                                color = Color.Black,
+                                modifier = Modifier.padding(2.dp)
+                            )
+                            Spacer(modifier = Modifier.size(16.dp))
+                            Row() {
+                                Button(
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { viewModel.declineInvite() }) {
+                                    Text("Decline")
+                                }
+                                Spacer(modifier = Modifier.size(8.dp))
+                                Button(
+                                    modifier = Modifier.weight(1f), onClick = {
+                                        navController.navigate(inviteData?.route ?: "") {
+                                            launchSingleTop = true
+                                        }
+                                        viewModel.acceptInvite()
+                                    }) {
+                                    Text("Join")
+                                }
                             }
                         }
 
@@ -277,6 +405,24 @@ class MainActivity : ComponentActivity() {
             }
 
         }
+
+        inviteReceiver = remember {
+            val obj = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent) {
+                    val inviteId = intent.getStringExtra("inviteId")!!
+                    FirestoreUtils.getValidInvite(inviteId) { invite ->
+                        invite?.let {
+                            invite.route = intent.getStringExtra("route")!!
+                            invite.message = intent.getStringExtra("message")!!
+                            viewModel.showInvite(invite)
+                        }
+                    }
+                }
+            }
+            LocalBroadcastManager.getInstance(this)
+                .registerReceiver(obj, IntentFilter("INVITE_RECEIVED"))
+            obj
+        }
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -287,8 +433,7 @@ class MainActivity : ComponentActivity() {
     private fun askNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
-                    this,
-                    android.Manifest.permission.POST_NOTIFICATIONS
+                    this, android.Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -302,5 +447,23 @@ class MainActivity : ComponentActivity() {
                 it.result
             )
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        inviteReceiver?.let {
+            LocalBroadcastManager.getInstance(this)
+                .registerReceiver(it, IntentFilter("INVITE_RECEIVED"))
+        }
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Unregister receiver when activity is not visible
+        inviteReceiver?.let {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(inviteReceiver!!)
+        }
+
     }
 }

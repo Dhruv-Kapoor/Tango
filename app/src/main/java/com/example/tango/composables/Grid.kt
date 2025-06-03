@@ -41,6 +41,7 @@ fun <T> Grid(
     modifier: Modifier = Modifier,
     cellSize: Dp = CELL_SIZE,
     enableDragging: Boolean = false,
+    drawBorders: Boolean = true,
     onDragStart: ((Pair<Int, Int>) -> Unit)? = null,
     onDrag: ((Pair<Int, Int>) -> Unit)? = null,
     onDragEnd: (() -> Unit)? = null,
@@ -49,7 +50,6 @@ fun <T> Grid(
     val edgeColor = colorResource(R.color.border_color)
     val cellSizeInPixels = cellSize.dpToPx()
     var currentTouchedCoordinates by remember { mutableStateOf<Pair<Int, Int>?>(null) }
-
     fun getCoordinates(offset: Offset): Pair<Int, Int> {
         var i = (offset.y / cellSizeInPixels).toInt()
         var j = (offset.x / cellSizeInPixels).toInt()
@@ -63,32 +63,27 @@ fun <T> Grid(
     Box(Modifier, contentAlignment = Alignment.Center) {
         Column(
             modifier = modifier
-                .border(
-                    width = 0.5.dp,
-                    color = edgeColor,
-                    shape = RoundedCornerShape(4.dp)
-                )
-                .clip(RoundedCornerShape(4.dp))
+                .conditional(drawBorders) {
+                    border(
+                        width = 0.5.dp, color = edgeColor, shape = RoundedCornerShape(4.dp)
+                    ).clip(RoundedCornerShape(4.dp))
+                }
                 .conditional(enableDragging) {
                     pointerInput(Unit) {
-                        detectDragGestures(
-                            onDragStart = { offset ->
-                                val coordinates = getCoordinates(offset)
-                                currentTouchedCoordinates = coordinates
-                                onDragStart?.invoke(coordinates)
+                        detectDragGestures(onDragStart = { offset ->
+                            val coordinates = getCoordinates(offset)
+                            currentTouchedCoordinates = coordinates
+                            onDragStart?.invoke(coordinates)
+                            onDrag?.invoke(coordinates)
+                        }, onDrag = { change, offset ->
+                            val coordinates = getCoordinates(change.position)
+                            if (coordinates != currentTouchedCoordinates) {
                                 onDrag?.invoke(coordinates)
-                            },
-                            onDrag = { change, offset ->
-                                val coordinates = getCoordinates(change.position)
-                                if (coordinates != currentTouchedCoordinates) {
-                                    onDrag?.invoke(coordinates)
-                                }
-                                currentTouchedCoordinates = coordinates
-                            },
-                            onDragEnd = {
-                                onDragEnd?.invoke()
                             }
-                        )
+                            currentTouchedCoordinates = coordinates
+                        }, onDragEnd = {
+                            onDragEnd?.invoke()
+                        })
                     }
                 },
             verticalArrangement = Arrangement.Center,
@@ -141,9 +136,7 @@ fun TangoGridPreview(onCompleted: (() -> Unit)? = null) {
             TangoCellData(TangoCellValue.SUN),
             TangoCellData(TangoCellValue.MOON),
             TangoCellData(
-                TangoCellValue.MOON,
-                leftSymbol = SYMBOLS.EQUALS,
-                topSymbol = SYMBOLS.CROSS
+                TangoCellValue.MOON, leftSymbol = SYMBOLS.EQUALS, topSymbol = SYMBOLS.CROSS
             )
         ),
         arrayOf(
@@ -166,8 +159,7 @@ fun TangoGridPreview(onCompleted: (() -> Unit)? = null) {
     Box(
         Modifier
             .height(420.dp)
-            .width(420.dp),
-        contentAlignment = Alignment.Center
+            .width(420.dp), contentAlignment = Alignment.Center
     ) {
 //        Grid(grid) {
 //            onCompleted?.invoke()

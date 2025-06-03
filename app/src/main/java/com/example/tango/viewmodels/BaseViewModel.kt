@@ -2,6 +2,8 @@ package com.example.tango.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.example.tango.BuildConfig
+import com.example.tango.dataClasses.INVITE_STATUS
+import com.example.tango.dataClasses.Invite
 import com.example.tango.dataClasses.User
 import com.example.tango.utils.FirestoreUtils
 import com.google.firebase.Timestamp
@@ -42,6 +44,12 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
 
     internal val _updateAvailable = MutableStateFlow(false)
     val updateAvailable = _updateAvailable.asStateFlow()
+
+    internal val _inviteData = MutableStateFlow<Invite?>(null)
+    val inviteData = _inviteData.asStateFlow()
+
+    internal val _showInvite = MutableStateFlow<Boolean>(false)
+    val showInvite = _showInvite.asStateFlow()
 
     init {
         if (!preview) {
@@ -136,6 +144,29 @@ open class BaseViewModel(preview: Boolean = false) : ViewModel() {
             fetchUserStateAndStopLoading()
         }
         fetchAttemptedGrids()
+    }
+
+    fun showInvite(invite: Invite) {
+        _inviteData.value = invite
+        _showInvite.value = true
+    }
+
+    fun declineInvite() {
+        val invite = _inviteData.value
+        invite?.let {
+            it.status = INVITE_STATUS.DECLINED
+            FirestoreUtils.updateInvite(invite)
+            _showInvite.value = false
+        }
+    }
+
+    fun acceptInvite() {
+        val invite = _inviteData.value
+        invite?.let {
+            it.status = INVITE_STATUS.ACCEPTED
+            FirestoreUtils.updateInvite(invite)
+            _showInvite.value = false
+        }
     }
 
 }
