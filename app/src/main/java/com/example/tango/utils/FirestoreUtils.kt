@@ -371,6 +371,7 @@ object FirestoreUtils {
         if (user != null) {
             getDb().collection(COLLECTIONS.USERS.value).document(user.uid).set(
                 mapOf(
+                    "id" to user.uid,
                     "fcmToken" to token,
                     "name" to user.displayName,
                     "profilePic" to user.photoUrl

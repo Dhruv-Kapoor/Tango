@@ -287,13 +287,13 @@ fun BlurredPreviewBackground(
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = painterResource(R.drawable.tango_preview),
+            painter = painterResource(R.drawable.tictactoe_preview),
             contentDescription = "",
             contentScale = ContentScale.FillWidth,
             modifier = Modifier
                 .blur(
-                    radiusX = 30.dp,
-                    radiusY = 30.dp,
+                    radiusX = 15.dp,
+                    radiusY = 15.dp,
                     edgeTreatment = BlurredEdgeTreatment.Rectangle
                 )
         )
